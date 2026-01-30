@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test - CarConnect Ghana</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+            padding: 10px;
+            background: #ffe6e6;
+            border-radius: 5px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+            padding: 10px;
+            background: #e6ffe6;
+            border-radius: 5px;
+        }
+        .info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e6f3ff;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Login Test</h1>
+        <p>Test your Supabase authentication</p>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required placeholder="your@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required placeholder="••••••••">
+            </div>
+            
+            <button type="submit" id="loginBtn">Sign In</button>
+        </form>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Initialize Supabase client
+        const supabaseUrl = 'https://gyafbexyaenvkmsrrrqh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5YWZiZXh5YWVudmttc3JycnFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0MTM0OTYsImV4cCI6MjA4NDk4OTQ5Nn0.MOGiOnZWogGYsGV_1JZkKTzIul4ZRjWgDpvMQKDvKXg';
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        const results = document.getElementById('results');
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        function log(message, type = 'info') {
+            console.log(message);
+            const timestamp = new Date().toLocaleTimeString();
+            results.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        // Test 1: Check Supabase connection
+        async function testConnection() {
+            log('🔍 Testing Supabase connection...');
+            
+            try {
+                // Test basic connection
+                const { data, error } = await supabase.from('users').select('count');
+                
+                if (error) {
+                    log(`❌ Connection test failed: ${error.message}`, 'error');
+                    log(`Error code: ${error.code || 'N/A'}`, 'error');
+                    log(`Error details: ${JSON.stringify(error, null, 2)}`, 'error');
+                } else {
+                    log('✅ Supabase connection successful!', 'success');
+                    log(`Data: ${JSON.stringify(data)}`, 'info');
+                }
+            } catch (e) {
+                log(`❌ Connection test error: ${e.message}`, 'error');
+            }
+        }
+        
+        // Test 2: Check current session
+        async function checkSession() {
+            log('🔍 Checking current session...');
+            
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    log(`❌ Session check failed: ${error.message}`, 'error');
+                } else if (session) {
+                    log('✅ Active session found!', 'success');
+                    log(`User: ${session.user.email}`, 'info');
+                    log(`Session expires: ${new Date(session.expires_at * 1000).toLocaleString()}`, 'info');
+                } else {
+                    log('ℹ️ No active session', 'info');
+                }
+            } catch (e) {
+                log(`❌ Session check error: ${e.message}`, 'error');
+            }
+        }
+        
+        // Test 3: Handle login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in...';
+            
+            log(`🔐 Attempting login for: ${email}`);
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                
+                if (error) {
+                    log(`❌ Login failed: ${error.message}`, 'error');
+                    log(`Error code: ${error.code || 'N/A'}`, 'error');
+                    
+                    // Common error explanations
+                    if (error.code === 'invalid_credentials') {
+                        log('💡 This means the email/password combination is incorrect.', 'info');
+                        log('💡 Make sure you have an account, or try signing up first.', 'info');
+                    } else if (error.code === 'email_not_confirmed') {
+                        log('💡 Please check your email and confirm your account.', 'info');
+                    }
+                } else {
+                    log('✅ Login successful!', 'success');
+                    log(`User ID: ${data.user?.id}`, 'info');
+                    log(`Email: ${data.user?.email}`, 'info');
+                    log(`Session: ${data.session ? 'Active' : 'None'}`, 'info');
+                    
+                    if (data.session) {
+                        log(`Access token: ${data.session.access_token.substring(0, 20)}...`, 'info');
+                        log(`Expires at: ${new Date(data.session.expires_at * 1000).toLocaleString()}`, 'info');
+                    }
+                }
+            } catch (e) {
+                log(`❌ Login error: ${e.message}`, 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+            }
+        });
+        
+        // Test 4: Listen for auth changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            log(`🔄 Auth state changed: ${event}`, 'info');
+            if (session) {
+                log(`Session user: ${session.user?.email}`, 'info');
+            } else {
+                log('Session cleared', 'info');
+            }
+        });
+        
+        // Run initial tests
+        testConnection();
+        checkSession();
+        
+        log('🧪 Ready to test! Enter your credentials and click Sign In.', 'info');
+        log('💡 If you don\'t have an account, you can test sign up first at your app\'s register page.', 'info');
+    </script>
+</body>
+</html>

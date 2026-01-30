@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        const supabaseUrl = 'https://gyafbexyaenvkmsrrrqh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5YWZiZXh5YWVudmttc3JycnFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0MTM0OTYsImV4cCI6MjA4NDk4OTQ5Nn0.MOGiOnZWogGYsGV_1JZkKTzIul4ZRjWgDpvMQKDvKXg';
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        const results = document.getElementById('results');
+        
+        function log(message) {
+            console.log(message);
+            results.innerHTML += '<p>' + message + '</p>';
+        }
+        
+        async function testConnection() {
+            log('🔍 Testing Supabase connection...');
+            
+            try {
+                // Test 1: Check current session
+                const { data: { session }, error } = await supabase.auth.getSession();
+                log('🔐 Current session: ' + (session ? 'Found' : 'None'));
+                if (error) log('❌ Session error: ' + error.message);
+                
+                // Test 2: Try to sign up a test user
+                log('🧪 Testing sign up...');
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                    email: 'test@example.com',
+                    password: 'testpassword123',
+                    options: {
+                        data: {
+                            name: 'Test User'
+                        }
+                    }
+                });
+                
+                if (signUpError) {
+                    log('📝 Sign up error (might be normal): ' + signUpError.message);
+                } else {
+                    log('✅ Sign up successful: ' + (signUpData.user ? 'User created' : 'Email sent'));
+                }
+                
+                // Test 3: Try to sign in
+                log('🧪 Testing sign in...');
+                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                    email: 'test@example.com',
+                    password: 'testpassword123'
+                });
+                
+                if (signInError) {
+                    log('❌ Sign in error: ' + signInError.message);
+                    log('📊 Error details: ' + JSON.stringify(signInError, null, 2));
+                } else {
+                    log('✅ Sign in successful!');
+                    log('👤 User: ' + signInData.user.email);
+                    log('🔑 Session: ' + (signInData.session ? 'Active' : 'None'));
+                }
+                
+            } catch (e) {
+                log('❌ Test failed: ' + e.message);
+            }
+        }
+        
+        // Run the test
+        testConnection();
+    </script>
+</body>
+</html>
