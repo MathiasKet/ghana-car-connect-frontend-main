@@ -150,6 +150,7 @@ export class PaystackService {
       console.error('Payment verification failed:', error);
       // For development, return success if backend is not available
       if (import.meta.env.DEV) {
+        console.warn('Backend not available, simulating payment verification');
         return { status: 'success' };
       }
       throw error;
@@ -240,6 +241,14 @@ export class PaystackService {
       return response.data;
     } catch (error) {
       console.error('Refund failed:', error);
+      // For development, simulate successful refund
+      if (import.meta.env.DEV) {
+        console.warn('Backend not available, simulating refund');
+        return { 
+          status: 'success', 
+          message: 'Refund simulated successfully (development mode)' 
+        };
+      }
       throw error;
     }
   }

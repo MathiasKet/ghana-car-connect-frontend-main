@@ -26,34 +26,16 @@ import {
   XCircle,
   AlertCircle,
   Download,
-  Image
+  Image,
+  Loader2
 } from 'lucide-react';
-import { useAdminSync } from '@/hooks/useRealtimeSync';
-import api from '@/services/api';
+import SupabaseService from '@/services/supabaseService';
+import { CarListing } from '@/lib/supabase';
 
-interface AdminCarListing {
-  id: string;
-  make: string;
-  model: string;
-  year: number;
-  price: number;
-  status: 'active' | 'pending' | 'sold' | 'rejected' | 'expired';
-  featured: boolean;
-  location: string;
+interface AdminCarListing extends CarListing {
   sellerName: string;
   sellerEmail: string;
   sellerPhone: string;
-  views: number;
-  inquiries: number;
-  createdAt: string;
-  expiresAt: string;
-  images: string[];
-  description: string;
-  condition: string;
-  transmission: string;
-  fuelType: string;
-  mileage: number;
-  listingType: 'standard' | 'featured';
   paymentStatus: 'paid' | 'pending' | 'failed';
 }
 
@@ -67,24 +49,49 @@ const AdminCarListings = () => {
   const [selectedListing, setSelectedListing] = useState<AdminCarListing | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
-  
-  // Real-time sync for admin actions
-  const { triggerListingUpdate } = useAdminSync();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load listings from Supabase
-    const loadListings = async () => {
-      try {
-        const allListings = await api.getAllListings();
-        setListings(allListings);
-        setFilteredListings(allListings);
-      } catch (error) {
-        console.error('Failed to load listings:', error);
-      }
-    };
-
     loadListings();
   }, []);
+
+  const loadListings = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch listings with user data
+      const { data: listings, error } = await SupabaseService.supabase
+        .from('car_listings')
+        .select(`
+          *,
+          users!car_listings_user_id_fkey (
+            name,
+            email,
+            phone
+          )
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Transform data to match AdminCarListing interface
+      const adminListings = (listings || []).map(listing => ({
+        ...listing,
+        sellerName: listing.users?.name || 'Unknown',
+        sellerEmail: listing.users?.email || 'Unknown',
+        sellerPhone: listing.users?.phone || 'Unknown',
+        paymentStatus: 'paid' // You can implement actual payment status tracking
+      }));
+      
+      setListings(adminListings);
+      setFilteredListings(adminListings);
+      
+    } catch (error) {
+      console.error('Failed to load listings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let filtered = listings;
@@ -106,7 +113,8 @@ const AdminCarListings = () => {
 
     // Apply type filter
     if (typeFilter !== 'all') {
-      filtered = filtered.filter(listing => listing.listingType === typeFilter);
+      const isFeatured = typeFilter === 'featured';
+      filtered = filtered.filter(listing => listing.featured === isFeatured);
     }
 
     // Apply tab filter
@@ -120,23 +128,18 @@ const AdminCarListings = () => {
   const handleStatusChange = async (listingId: string, newStatus: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { error } = await SupabaseService.supabase
+        .from('car_listings')
+        .update({ status: newStatus })
+        .eq('id', listingId);
       
-      const updatedListing = listings.find(listing => listing.id === listingId);
+      if (error) throw error;
       
       setListings(listings.map(listing => 
         listing.id === listingId ? { ...listing, status: newStatus as any } : listing
       ));
       
-      // Trigger real-time update to user dashboard
-      if (updatedListing) {
-        const userId = 'user_' + listingId; // Mock user ID - in real app, get from listing
-        triggerListingUpdate(listingId, newStatus as any, userId);
-        
-        console.log(`Admin action: Listing ${listingId} status changed to ${newStatus}`);
-        console.log(`Real-time update triggered for user: ${userId}`);
-      }
+      console.log(`Admin action: Listing ${listingId} status changed to ${newStatus}`);
     } catch (error) {
       console.error('Failed to update listing status:', error);
     } finally {
@@ -147,29 +150,21 @@ const AdminCarListings = () => {
   const handleFeaturedToggle = async (listingId: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const listing = listings.find(l => l.id === listingId);
+      const newFeaturedState = !listing?.featured;
       
-      const updatedListing = listings.find(listing => listing.id === listingId);
-      const newFeaturedState = !updatedListing?.featured;
+      const { error } = await SupabaseService.supabase
+        .from('car_listings')
+        .update({ featured: newFeaturedState })
+        .eq('id', listingId);
+      
+      if (error) throw error;
       
       setListings(listings.map(listing => 
-        listing.id === listingId ? { 
-          ...listing, 
-          featured: newFeaturedState,
-          listingType: newFeaturedState ? 'featured' : 'standard'
-        } : listing
+        listing.id === listingId ? { ...listing, featured: newFeaturedState } : listing
       ));
       
-      // Trigger real-time update to user dashboard
-      if (updatedListing) {
-        const userId = 'user_' + listingId; // Mock user ID - in real app, get from listing
-        const action = newFeaturedState ? 'featured' : 'unfeatured';
-        triggerListingUpdate(listingId, action, userId);
-        
-        console.log(`Admin action: Listing ${listingId} ${action}`);
-        console.log(`Real-time update triggered for user: ${userId}`);
-      }
+      console.log(`Admin action: Listing ${listingId} ${newFeaturedState ? 'featured' : 'unfeatured'}`);
     } catch (error) {
       console.error('Failed to toggle featured status:', error);
     } finally {
@@ -210,7 +205,7 @@ const AdminCarListings = () => {
   const pendingListings = listings.filter(l => l.status === 'pending').length;
   const soldListings = listings.filter(l => l.status === 'sold').length;
   const totalRevenue = listings.filter(l => l.paymentStatus === 'paid').reduce((sum, listing) => 
-    sum + (listing.listingType === 'featured' ? 150 : 50), 0
+    sum + (listing.featured ? 150 : 50), 0
   );
 
   return (
@@ -480,7 +475,7 @@ const AdminCarListings = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Fuel Type</p>
-                    <p className="font-medium capitalize">{selectedListing.fuelType}</p>
+                    <p className="font-medium capitalize">{selectedListing.fuel_type}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Location</p>
@@ -533,11 +528,11 @@ const AdminCarListings = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Listed</p>
-                    <p className="font-medium">{new Date(selectedListing.createdAt).toLocaleDateString()}</p>
+                    <p className="font-medium">{new Date(selectedListing.created_at).toLocaleDateString()}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Expires</p>
-                    <p className="font-medium">{new Date(selectedListing.expiresAt).toLocaleDateString()}</p>
+                    <p className="font-medium">{new Date(selectedListing.expires_at).toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>
@@ -680,7 +675,7 @@ const ListingsTable = ({
               <TableCell>
                 <p className="font-medium">{formatCurrency(listing.price)}</p>
                 <p className="text-sm text-gray-600">
-                  {listing.listingType === 'featured' ? 'Featured' : 'Standard'}
+                  {listing.featured ? 'Featured' : 'Standard'}
                 </p>
               </TableCell>
               <TableCell>
@@ -691,8 +686,8 @@ const ListingsTable = ({
               </TableCell>
               <TableCell>
                 <div className="text-sm">
-                  <p>{new Date(listing.createdAt).toLocaleDateString()}</p>
-                  <p className="text-gray-600">Expires: {new Date(listing.expiresAt).toLocaleDateString()}</p>
+                  <p>{new Date(listing.created_at).toLocaleDateString()}</p>
+                  <p className="text-gray-600">Expires: {new Date(listing.expires_at).toLocaleDateString()}</p>
                 </div>
               </TableCell>
               <TableCell>

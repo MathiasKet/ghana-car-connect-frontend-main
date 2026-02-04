@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { 
   LayoutDashboard, 
   Settings, 
@@ -13,13 +14,30 @@ import {
   LogOut,
   Users,
   CreditCard,
-  List
+  List,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { loading, isAdmin, user, logout } = useAdminAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-gray-600">Checking admin access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null; // Will redirect by useAdminAuth hook
+  }
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -73,7 +91,11 @@ const AdminLayout = () => {
             })}
           </nav>
           <div className="flex-shrink-0 p-4 border-t border-gray-200">
-            <Button variant="ghost" className="w-full justify-start text-gray-600 hover:text-gray-900">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-gray-600 hover:text-gray-900"
+              onClick={logout}
+            >
               <LogOut className="mr-3 h-5 w-5" />
               Logout
             </Button>

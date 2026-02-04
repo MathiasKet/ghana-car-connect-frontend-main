@@ -55,9 +55,11 @@ export const useSupabaseAuth = () => {
             is_active: true,
             is_verified: session.user.user_metadata?.is_verified || false,
           };
+          localStorage.setItem('user', JSON.stringify(user));
           setAuthState({ user, loading: false, error: null });
         } else {
           currentUserIdRef.current = null;
+          localStorage.removeItem('user');
           setAuthState({ user: null, loading: false, error: null });
         }
       } catch (error) {
@@ -117,6 +119,7 @@ export const useSupabaseAuth = () => {
               is_active: true,
               is_verified: session.user.user_metadata?.is_verified || false,
             };
+            localStorage.setItem('user', JSON.stringify(user));
             setAuthState({ user, loading: false, error: null });
             
             // Create Basic subscription for new users (with error handling)
@@ -129,6 +132,7 @@ export const useSupabaseAuth = () => {
           }
         } else if (event === 'SIGNED_OUT') {
           currentUserIdRef.current = null;
+          localStorage.removeItem('user');
           setAuthState({ user: null, loading: false, error: null });
         }
       }

@@ -23,19 +23,13 @@ import {
   Calendar,
   TrendingUp,
   UserPlus,
-  Download
+  Download,
+  Loader2
 } from 'lucide-react';
-import api from '@/services/api';
+import SupabaseService from '@/services/supabaseService';
+import { User } from '@/lib/supabase';
 
-interface AdminUser {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  joinDate: string;
-  status: 'active' | 'suspended' | 'pending';
-  isVerified: boolean;
+interface AdminUser extends User {
   totalListings: number;
   activeListings: number;
   totalSpent: number;
@@ -50,21 +44,63 @@ const AdminUsers = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load users from Supabase
-    const loadUsers = async () => {
-      try {
-        const allUsers = await api.getAllUsers();
-        setUsers(allUsers);
-        setFilteredUsers(allUsers);
-      } catch (error) {
-        console.error('Failed to load users:', error);
-      }
-    };
-
     loadUsers();
   }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch users from Supabase
+      const { data: users, error } = await SupabaseService.supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Fetch additional data for each user
+      const usersWithStats = await Promise.all(
+        (users || []).map(async (user) => {
+          // Get user's listings
+          const { data: listings } = await SupabaseService.supabase
+            .from('car_listings')
+            .select('status')
+            .eq('user_id', user.id);
+          
+          // Get user's payments
+          const { data: payments } = await SupabaseService.supabase
+            .from('payments')
+            .select('amount')
+            .eq('user_id', user.id)
+            .eq('status', 'completed');
+          
+          const totalListings = listings?.length || 0;
+          const activeListings = listings?.filter(l => l.status === 'active').length || 0;
+          const totalSpent = payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+          
+          return {
+            ...user,
+            totalListings,
+            activeListings,
+            totalSpent,
+            lastLogin: 'Recently' // You can implement actual last login tracking
+          };
+        })
+      );
+      
+      setUsers(usersWithStats);
+      setFilteredUsers(usersWithStats);
+      
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let filtered = users;
@@ -80,7 +116,8 @@ const AdminUsers = () => {
 
     // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(user => user.status === statusFilter);
+      const isActive = statusFilter === 'active';
+      filtered = filtered.filter(user => user.is_active === isActive);
     }
 
     setFilteredUsers(filtered);
@@ -89,11 +126,15 @@ const AdminUsers = () => {
   const handleStatusChange = async (userId: string, newStatus: 'active' | 'suspended') => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { error } = await SupabaseService.supabase
+        .from('users')
+        .update({ is_active: newStatus === 'active' })
+        .eq('id', userId);
+      
+      if (error) throw error;
       
       setUsers(users.map(user => 
-        user.id === userId ? { ...user, status: newStatus } : user
+        user.id === userId ? { ...user, is_active: newStatus === 'active' } : user
       ));
     } catch (error) {
       console.error('Failed to update user status:', error);
@@ -105,11 +146,16 @@ const AdminUsers = () => {
   const handleVerification = async (userId: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const user = users.find(u => u.id === userId);
+      const { error } = await SupabaseService.supabase
+        .from('users')
+        .update({ is_verified: !user?.is_verified })
+        .eq('id', userId);
+      
+      if (error) throw error;
       
       setUsers(users.map(user => 
-        user.id === userId ? { ...user, isVerified: !user.isVerified } : user
+        user.id === userId ? { ...user, is_verified: !user.is_verified } : user
       ));
     } catch (error) {
       console.error('Failed to update verification status:', error);
@@ -118,13 +164,8 @@ const AdminUsers = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'suspended': return 'bg-red-100 text-red-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
   };
 
   const formatCurrency = (amount: number) => {
@@ -136,9 +177,18 @@ const AdminUsers = () => {
   };
 
   const totalUsers = users.length;
-  const activeUsers = users.filter(u => u.status === 'active').length;
-  const verifiedUsers = users.filter(u => u.isVerified).length;
+  const activeUsers = users.filter(u => u.is_active).length;
+  const verifiedUsers = users.filter(u => u.is_verified).length;
   const totalRevenue = users.reduce((sum, user) => sum + user.totalSpent, 0);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-gray-600">Loading users...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -272,7 +322,7 @@ const AdminUsers = () => {
                         <div>
                           <div className="flex items-center space-x-2">
                             <p className="font-medium">{user.name}</p>
-                            {user.isVerified && (
+                            {user.is_verified && (
                               <CheckCircle className="h-4 w-4 text-green-500" />
                             )}
                           </div>
@@ -288,13 +338,13 @@ const AdminUsers = () => {
                         </div>
                         <div className="flex items-center text-sm">
                           <MapPin className="h-3 w-3 mr-1 text-gray-400" />
-                          {user.location}
+                          {user.phone || 'Not provided'}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(user.status)}>
-                        {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                      <Badge className={getStatusColor(user.is_active)}>
+                        {user.is_active ? 'Active' : 'Suspended'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -308,7 +358,7 @@ const AdminUsers = () => {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <p>{new Date(user.joinDate).toLocaleDateString()}</p>
+                        <p>{new Date(user.created_at).toLocaleDateString()}</p>
                         <p className="text-gray-600">{user.lastLogin}</p>
                       </div>
                     </TableCell>
@@ -330,9 +380,9 @@ const AdminUsers = () => {
                           onClick={() => handleVerification(user.id)}
                           disabled={isLoading}
                         >
-                          {user.isVerified ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                          {user.is_verified ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
                         </Button>
-                        {user.status === 'active' ? (
+                        {user.is_active ? (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -380,11 +430,11 @@ const AdminUsers = () => {
                 <div>
                   <h3 className="text-lg font-semibold">{selectedUser.name}</h3>
                   <p className="text-gray-600">{selectedUser.email}</p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Badge className={getStatusColor(selectedUser.status)}>
-                      {selectedUser.status}
+                  <div className="flex items-center space-x-2">
+                    <Badge className={getStatusColor(selectedUser.is_active)}>
+                      {selectedUser.is_active ? 'Active' : 'Suspended'}
                     </Badge>
-                    {selectedUser.isVerified && (
+                    {selectedUser.is_verified && (
                       <Badge variant="outline" className="text-green-600">
                         Verified
                       </Badge>
@@ -400,11 +450,11 @@ const AdminUsers = () => {
                 </div>
                 <div className="flex items-center text-sm">
                   <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                  {selectedUser.location}
+                  {selectedUser.phone || 'Not provided'}
                 </div>
                 <div className="flex items-center text-sm">
                   <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                  Joined: {new Date(selectedUser.joinDate).toLocaleDateString()}
+                  Joined: {new Date(selectedUser.created_at).toLocaleDateString()}
                 </div>
                 <div className="flex items-center text-sm">
                   <Calendar className="h-4 w-4 mr-2 text-gray-400" />
