@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,15 @@ import {
 
 const Sell = () => {
   const navigate = useNavigate();
+
+  // Check if user is logged in
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      navigate('/login');
+    }
+  }, [navigate]);
+
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
@@ -59,18 +68,16 @@ const Sell = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
       setSubmitSuccess(true);
       setTimeout(() => {
-        navigate('/listing-payment', { 
-          state: { 
-            carData: formData 
-          }
-        });
+        navigate('/list-car');
       }, 2000);
-    }, 2000);
+    } catch (err) {
+      console.error('Failed to submit:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitSuccess) {

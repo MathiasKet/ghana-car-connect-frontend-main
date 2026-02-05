@@ -27,6 +27,8 @@ import {
   Star
 } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import api from '@/services/api';
 
 interface CarFormData {
   // Basic Information
@@ -59,6 +61,7 @@ interface CarFormData {
 
 const ListCar = () => {
   const navigate = useNavigate();
+  const { user: supabaseUser, loading: authLoading } = useSupabaseAuth();
   const [user, setUser] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [formData, setFormData] = useState<CarFormData>({
@@ -83,31 +86,28 @@ const ListCar = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      
-      // Mock subscription data - in real app, this would come from user data
-      const mockSubscription = {
-        plan: 'pro',
-        status: 'active',
-        benefits: {
-          listingDiscount: 20,
-          freeListings: 5,
-          featuredDiscount: 10,
-          prioritySupport: true,
-          analytics: true,
-          bulkListing: true,
-          verifiedBadge: true
-        }
-      };
-      
-      setSubscription(mockSubscription);
-    } else {
+    if (authLoading) return;
+
+    if (!supabaseUser) {
       navigate('/login');
+      return;
     }
-  }, [navigate]);
+
+    setUser(supabaseUser);
+
+    // Load user subscription
+    const loadSubscription = async () => {
+      try {
+        const sub = await api.getUserSubscription(supabaseUser.id);
+        if (sub) {
+          setSubscription(sub);
+        }
+      } catch (err) {
+        console.error('Failed to load subscription:', err);
+      }
+    };
+    loadSubscription();
+  }, [supabaseUser, authLoading, navigate]);
 
   // Calculate pricing based on subscription benefits
   const calculatePricing = () => {
@@ -166,11 +166,25 @@ const ListCar = () => {
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock listing creation
-      console.log('Car listing created:', formData);
+      // Create listing via Supabase
+      const carData = {
+        user_id: user.id,
+        make: formData.make,
+        model: formData.model,
+        year: parseInt(formData.year),
+        price: parseFloat(formData.price),
+        mileage: parseInt(formData.mileage),
+        condition: formData.condition,
+        transmission: formData.transmission,
+        fuel_type: formData.fuelType,
+        description: formData.description,
+        location: formData.location,
+        images: formData.images,
+        status: 'pending',
+        featured: formData.featuredListing,
+      };
+
+      await api.createCar(carData);
       
       // Calculate final amount based on subscription benefits
       const finalAmount = formData.featuredListing ? pricing.featured : pricing.standard;
@@ -189,6 +203,7 @@ const ListCar = () => {
         }
       });
     } catch (err) {
+      console.error('Failed to create listing:', err);
       setError('Failed to create listing. Please try again.');
     } finally {
       setIsLoading(false);

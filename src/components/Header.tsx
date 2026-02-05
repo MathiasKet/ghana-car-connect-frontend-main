@@ -11,6 +11,7 @@ import {
   X,
   Users
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,7 +25,8 @@ const Header = () => {
     }
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('user');
     setUser(null);
     navigate('/');
