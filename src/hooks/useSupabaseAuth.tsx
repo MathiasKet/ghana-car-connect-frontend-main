@@ -18,13 +18,13 @@ export const useSupabaseAuth = () => {
       // Check if user already has a subscription
       const existingSubscription = await api.getUserSubscription(userId);
       if (existingSubscription) {
-        console.log('User already has a subscription');
+        // User already has a subscription
         return;
       }
 
       // Create Basic subscription
       await api.createBasicSubscription(userId);
-      console.log('Basic subscription created for user:', userId);
+      // Basic subscription created successfully
     } catch (error) {
       console.error('Failed to create basic subscription:', error);
       // Don't throw error - this shouldn't block login
@@ -65,7 +65,7 @@ export const useSupabaseAuth = () => {
       } catch (error) {
         // Handle AbortError and other session errors gracefully
         if (error instanceof Error && error.name === 'AbortError') {
-          console.log('Session request aborted - this is normal during cleanup');
+          // Session request aborted - normal during cleanup
         } else {
           console.error('Error getting initial session:', error);
         }
@@ -79,7 +79,6 @@ export const useSupabaseAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
         
         // Prevent rapid state changes by debouncing
         if (event === 'INITIAL_SESSION') {
@@ -258,13 +257,11 @@ export const useSupabaseAuth = () => {
 
   const updateProfile = async (updates: Partial<AuthUser>) => {
     // This would need to be implemented with actual database updates
-    console.log('Profile update not yet implemented:', updates);
     return { success: false, error: 'Not implemented' };
   };
 
   const uploadAvatar = async (file: File) => {
     // This would need to be implemented with actual file upload
-    console.log('Avatar upload not yet implemented');
     return { success: false, error: 'Not implemented' };
   };
 

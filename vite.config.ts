@@ -16,4 +16,16 @@ export default defineConfig(({ mode }: { mode: string }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
+          sentry: ['@sentry/react'],
+          ui: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-tabs', '@radix-ui/react-select'],
+        },
+      },
+    },
+  },
 }));

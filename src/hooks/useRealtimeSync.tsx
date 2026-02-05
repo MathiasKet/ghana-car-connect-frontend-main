@@ -68,7 +68,6 @@ class MockWebSocketService {
     // Simulate connection delay
     setTimeout(() => {
       this.connected = true;
-      console.log('Mock WebSocket connected');
       
       // Simulate receiving some events
       this.simulateIncomingEvents();
@@ -77,7 +76,6 @@ class MockWebSocketService {
 
   disconnect() {
     this.connected = false;
-    console.log('Mock WebSocket disconnected');
   }
 
   subscribe(callback: (event: SyncEvent) => void) {
@@ -184,7 +182,6 @@ export const useAutoRefresh = (refreshFunction: () => void, eventTypes: SyncEven
 
   useEffect(() => {
     if (lastUpdate && eventTypes.includes(lastUpdate.type)) {
-      console.log(`Auto-refreshing due to event: ${lastUpdate.type}`);
       refreshFunction();
     }
   }, [lastUpdate, eventTypes, refreshFunction]);

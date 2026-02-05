@@ -78,11 +78,38 @@ export class SupabaseService {
       if (error) throw error;
 
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('users')
           .select('*')
           .eq('id', user.id)
           .single();
+
+        if (profileError || !profile) {
+          // Auto-create profile if missing
+          const newProfile = {
+            id: user.id,
+            email: user.email!,
+            name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            phone: user.user_metadata?.phone || null,
+            role: user.user_metadata?.role || 'user',
+            is_verified: false,
+            is_active: true,
+          };
+
+          const { data: createdProfile, error: insertError } = await supabase
+            .from('users')
+            .upsert(newProfile, { onConflict: 'id' })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Failed to create user profile:', insertError);
+            // Return a fallback profile so the app doesn't crash
+            return { user, profile: newProfile };
+          }
+
+          return { user, profile: createdProfile };
+        }
 
         return { user, profile };
       }

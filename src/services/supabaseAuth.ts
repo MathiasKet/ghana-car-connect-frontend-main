@@ -62,7 +62,6 @@ class SupabaseAuthService {
   }
 
   private async handleAuthChange(event: string, session: any) {
-    console.log('Auth state changed:', event, session);
     
     if (session?.user) {
       await this.loadUserProfile(session.user.id);

@@ -99,7 +99,6 @@ const CarBooking = () => {
       setBookingStep(2);
     } else {
       // Process booking
-      console.log('Booking submitted:', { car, bookingData, totalPrice: calculatedPrice });
       // Navigate to confirmation page
       navigate('/booking-confirmation', { 
         state: { 

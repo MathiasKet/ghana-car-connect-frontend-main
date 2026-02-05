@@ -73,7 +73,6 @@ class SupabaseRealtimeService {
 
       channel.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log(`Subscribed to ${channelName}`);
         } else if (status === 'CHANNEL_ERROR') {
           console.error(`Failed to subscribe to ${channelName}`);
         } else if (status === 'TIMED_OUT' || status === 'CLOSED') {
@@ -158,7 +157,6 @@ class SupabaseRealtimeService {
   emitCustomEvent(event: SupabaseRealtimeEvent) {
     // This would typically be handled by database triggers
     // For now, we'll broadcast to relevant channels
-    console.log('Emitting custom event:', event);
     
     // Find relevant channels and notify listeners
     this.listeners.forEach((listeners, channelName) => {
@@ -249,7 +247,6 @@ export const useSupabaseRealtime = (userId?: string) => {
     unsubscribers.push(
       realtimeService.subscribeToUserListings(userId, (event) => {
         setLastUpdate(event);
-        console.log('User listing update:', event);
       })
     );
 
@@ -257,7 +254,6 @@ export const useSupabaseRealtime = (userId?: string) => {
     unsubscribers.push(
       realtimeService.subscribeToUserPayments(userId, (event) => {
         setLastUpdate(event);
-        console.log('User payment update:', event);
       })
     );
 
@@ -265,7 +261,6 @@ export const useSupabaseRealtime = (userId?: string) => {
     unsubscribers.push(
       realtimeService.subscribeToUserSubscriptions(userId, (event) => {
         setLastUpdate(event);
-        console.log('User subscription update:', event);
       })
     );
 
@@ -282,7 +277,6 @@ export const useSupabaseRealtime = (userId?: string) => {
     unsubscribers.push(
       realtimeService.subscribeToAllListings((event) => {
         setLastUpdate(event);
-        console.log('Admin listing update:', event);
       })
     );
 
@@ -290,7 +284,6 @@ export const useSupabaseRealtime = (userId?: string) => {
     unsubscribers.push(
       realtimeService.subscribeToAllPayments((event) => {
         setLastUpdate(event);
-        console.log('Admin payment update:', event);
       })
     );
 
@@ -298,7 +291,6 @@ export const useSupabaseRealtime = (userId?: string) => {
     unsubscribers.push(
       realtimeService.subscribeToAllUsers((event) => {
         setLastUpdate(event);
-        console.log('Admin user update:', event);
       })
     );
 
@@ -339,7 +331,6 @@ export const useSupabaseAutoRefresh = (
 
   useEffect(() => {
     if (lastUpdate && eventTypes.includes(lastUpdate.eventType)) {
-      console.log(`Auto-refreshing due to event: ${lastUpdate.eventType}`);
       refreshFunction();
     }
   }, [lastUpdate, eventTypes, refreshFunction]);

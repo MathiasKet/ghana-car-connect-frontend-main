@@ -1,11 +1,13 @@
 
 import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Home, Car, Heart, User } from 'lucide-react';
 
 const MobileNavbar = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [scrollDirection, setScrollDirection] = useState<'down' | 'up'>('up');
   const [lastScrollY, setLastScrollY] = useState(0);
+  const location = useLocation();
   
   useEffect(() => {
     const controlNavbar = () => {
@@ -28,6 +30,8 @@ const MobileNavbar = () => {
       window.removeEventListener('scroll', controlNavbar);
     };
   }, [lastScrollY]);
+
+  const isActive = (path: string) => location.pathname === path;
   
   return (
     <div 
@@ -36,37 +40,37 @@ const MobileNavbar = () => {
       }`}
     >
       <div className="flex items-center justify-around h-16">
-        <a 
-          href="#" 
-          className="flex flex-col items-center justify-center w-full py-1 text-primary"
+        <Link 
+          to="/" 
+          className={`flex flex-col items-center justify-center w-full py-1 ${isActive('/') ? 'text-primary' : 'text-gray-600'}`}
         >
           <Home className="w-5 h-5" />
           <span className="mt-1 text-xs">Home</span>
-        </a>
+        </Link>
         
-        <a 
-          href="#" 
-          className="flex flex-col items-center justify-center w-full py-1 text-gray-600"
+        <Link 
+          to="/buy" 
+          className={`flex flex-col items-center justify-center w-full py-1 ${isActive('/buy') ? 'text-primary' : 'text-gray-600'}`}
         >
           <Car className="w-5 h-5" />
           <span className="mt-1 text-xs">Browse</span>
-        </a>
+        </Link>
         
-        <a 
-          href="#" 
-          className="flex flex-col items-center justify-center w-full py-1 text-gray-600"
+        <Link 
+          to="/sell" 
+          className={`flex flex-col items-center justify-center w-full py-1 ${isActive('/sell') ? 'text-primary' : 'text-gray-600'}`}
         >
           <Heart className="w-5 h-5" />
-          <span className="mt-1 text-xs">Saved</span>
-        </a>
+          <span className="mt-1 text-xs">Sell</span>
+        </Link>
         
-        <a 
-          href="#" 
-          className="flex flex-col items-center justify-center w-full py-1 text-gray-600"
+        <Link 
+          to="/dashboard" 
+          className={`flex flex-col items-center justify-center w-full py-1 ${isActive('/dashboard') ? 'text-primary' : 'text-gray-600'}`}
         >
           <User className="w-5 h-5" />
           <span className="mt-1 text-xs">Account</span>
-        </a>
+        </Link>
       </div>
     </div>
   );

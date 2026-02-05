@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,58 +6,62 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import * as Sentry from "@sentry/react";
 import { Toaster as HotToaster } from 'react-hot-toast';
+
+// Eagerly loaded (above the fold)
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Buy from "./pages/Buy";
-import Rent from "./pages/Rent";
-import Sell from "./pages/Sell";
-import About from "./pages/About";
-import ListingPayment from "./pages/ListingPayment";
-import ListingSuccess from "./pages/ListingSuccess";
-import ValueAddedServices from "./pages/ValueAddedServices";
-import ServicesPayment from "./pages/ServicesPayment";
-import CarDetails from "./pages/CarDetails";
-import CarEstimate from "./pages/CarEstimate";
-import Advertising from "./pages/Advertising";
-import DealerAccount from "./pages/DealerAccount";
-import { PaystackTest } from "./components/PaystackTest";
-import PaymentTest from "./components/PaymentTest";
-import RealtimeTest from "./components/RealtimeTest";
-import SupabaseTest from "./components/SupabaseTest";
-import AuthTest from "./components/AuthTest";
-import PaymentVerificationPanel from "./components/PaymentVerification";
-import ImageUpload from "./components/ImageUpload";
-import ImageUploadTest from "./components/ImageUploadTest";
-import AdminImageUploadTest from "./components/AdminImageUploadTest.tsx";
-import AdminLayout from "./pages/admin/AdminLayout.tsx";
-import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
-import AdminHero from "./pages/admin/AdminHero.tsx";
-import AdminFeatured from "./pages/admin/AdminFeatured.tsx";
-import AdminTestimonials from "./pages/admin/AdminTestimonials.tsx";
-import AdminSettings from "./pages/admin/AdminSettings.tsx";
-import AdminUsers from "./pages/admin/AdminUsers.tsx";
-import AdminCarListings from "./pages/admin/AdminCarListings.tsx";
-import AdminPayments from "./pages/admin/AdminPayments.tsx";
-import Login from "./pages/auth/Login.tsx";
-import Register from "./pages/auth/Register.tsx";
-import UserDashboard from "./pages/UserDashboard.tsx";
-import ListCar from "./pages/ListCar.tsx";
-import Payment from "./pages/Payment.tsx";
-import PaymentSuccess from "./pages/PaymentSuccess.tsx";
-import PaymentFailed from "./pages/PaymentFailed.tsx";
-import SubscriptionPlans from "./pages/SubscriptionPlans.tsx";
-import SubscriptionCheckout from "./pages/SubscriptionCheckout.tsx";
-import UserSubscription from "./pages/UserSubscription.tsx";
-import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
-import TermsOfService from "./pages/TermsOfService.tsx";
-import CookiesPolicy from "./pages/CookiesPolicy.tsx";
-import VehicleInspection from "./pages/VehicleInspection.tsx";
-import CarInsurance from "./pages/CarInsurance.tsx";
-import CarFinancing from "./pages/CarFinancing.tsx";
-import CarTransport from "./pages/CarTransport.tsx";
-import VehicleHistoryReports from "./pages/VehicleHistoryReports";
-import CarBooking from "./pages/CarBooking";
-import BookingConfirmation from "./pages/BookingConfirmation";
+
+// Lazy loaded pages
+const Buy = lazy(() => import("./pages/Buy"));
+const Rent = lazy(() => import("./pages/Rent"));
+const Sell = lazy(() => import("./pages/Sell"));
+const About = lazy(() => import("./pages/About"));
+const ListingPayment = lazy(() => import("./pages/ListingPayment"));
+const ListingSuccess = lazy(() => import("./pages/ListingSuccess"));
+const ValueAddedServices = lazy(() => import("./pages/ValueAddedServices"));
+const ServicesPayment = lazy(() => import("./pages/ServicesPayment"));
+const CarDetails = lazy(() => import("./pages/CarDetails"));
+const CarEstimate = lazy(() => import("./pages/CarEstimate"));
+const Advertising = lazy(() => import("./pages/Advertising"));
+const DealerAccount = lazy(() => import("./pages/DealerAccount"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const UserDashboard = lazy(() => import("./pages/UserDashboard"));
+const ListCar = lazy(() => import("./pages/ListCar"));
+const Payment = lazy(() => import("./pages/Payment"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentFailed = lazy(() => import("./pages/PaymentFailed"));
+const SubscriptionPlans = lazy(() => import("./pages/SubscriptionPlans"));
+const SubscriptionCheckout = lazy(() => import("./pages/SubscriptionCheckout"));
+const UserSubscription = lazy(() => import("./pages/UserSubscription"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const CookiesPolicy = lazy(() => import("./pages/CookiesPolicy"));
+const VehicleInspection = lazy(() => import("./pages/VehicleInspection"));
+const CarInsurance = lazy(() => import("./pages/CarInsurance"));
+const CarFinancing = lazy(() => import("./pages/CarFinancing"));
+const CarTransport = lazy(() => import("./pages/CarTransport"));
+const VehicleHistoryReports = lazy(() => import("./pages/VehicleHistoryReports"));
+const CarBooking = lazy(() => import("./pages/CarBooking"));
+const BookingConfirmation = lazy(() => import("./pages/BookingConfirmation"));
+
+// Admin pages
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminHero = lazy(() => import("./pages/admin/AdminHero"));
+const AdminFeatured = lazy(() => import("./pages/admin/AdminFeatured"));
+const AdminTestimonials = lazy(() => import("./pages/admin/AdminTestimonials"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminCarListings = lazy(() => import("./pages/admin/AdminCarListings"));
+const AdminPayments = lazy(() => import("./pages/admin/AdminPayments"));
+
+// Loading fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -118,78 +123,72 @@ const App = () => (
           }}
         />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            
-            {/* Main Navigation Routes */}
-            <Route path="/buy" element={<Buy />} />
-            <Route path="/rent" element={<Rent />} />
-            <Route path="/sell" element={<Sell />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/listing-payment" element={<ListingPayment />} />
-            <Route path="/listing-success" element={<ListingSuccess />} />
-            <Route path="/value-added-services" element={<ValueAddedServices />} />
-            <Route path="/services-payment" element={<ServicesPayment />} />
-            <Route path="/car/:id" element={<CarDetails />} />
-            <Route path="/estimate" element={<CarEstimate />} />
-            <Route path="/advertising" element={<Advertising />} />
-            <Route path="/dealer-account" element={<DealerAccount />} />
-            <Route path="/test-payment" element={<PaystackTest />} />
-            <Route path="/test-payment-flow" element={<PaymentTest />} />
-            <Route path="/test-realtime" element={<RealtimeTest />} />
-            <Route path="/test-supabase" element={<SupabaseTest />} />
-            <Route path="/test-auth" element={<AuthTest />} />
-            <Route path="/test-payments" element={<PaymentVerificationPanel />} />
-            <Route path="/test-images" element={<ImageUploadTest />} />
-            <Route path="/test-admin-images" element={<AdminImageUploadTest />} />
-            
-            {/* Authentication Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            
-            {/* User Dashboard Routes */}
-            <Route path="/dashboard" element={<UserDashboard />} />
-            <Route path="/list-car" element={<ListCar />} />
-            <Route path="/payment" element={<Payment />} />
-            <Route path="/payment/success" element={<PaymentSuccess />} />
-            <Route path="/payment/failed" element={<PaymentFailed />} />
-            
-            {/* Subscription Routes */}
-            <Route path="/subscription-plans" element={<SubscriptionPlans />} />
-            <Route path="/subscription-checkout" element={<SubscriptionCheckout />} />
-            <Route path="/subscription" element={<UserSubscription />} />
-            
-            {/* Legal Pages */}
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/cookies-policy" element={<CookiesPolicy />} />
-            
-            {/* Service Pages */}
-            <Route path="/vehicle-inspection" element={<VehicleInspection />} />
-            <Route path="/car-insurance" element={<CarInsurance />} />
-            <Route path="/car-financing" element={<CarFinancing />} />
-            <Route path="/car-transport" element={<CarTransport />} />
-            <Route path="/vehicle-history-reports" element={<VehicleHistoryReports />} />
-            
-            {/* Booking Pages */}
-            <Route path="/car-booking" element={<CarBooking />} />
-            <Route path="/booking-confirmation" element={<BookingConfirmation />} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="listings" element={<AdminCarListings />} />
-              <Route path="payments" element={<AdminPayments />} />
-              <Route path="hero" element={<AdminHero />} />
-              <Route path="featured" element={<AdminFeatured />} />
-              <Route path="testimonials" element={<AdminTestimonials />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              
+              {/* Main Navigation Routes */}
+              <Route path="/buy" element={<Buy />} />
+              <Route path="/rent" element={<Rent />} />
+              <Route path="/sell" element={<Sell />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/listing-payment" element={<ListingPayment />} />
+              <Route path="/listing-success" element={<ListingSuccess />} />
+              <Route path="/value-added-services" element={<ValueAddedServices />} />
+              <Route path="/services-payment" element={<ServicesPayment />} />
+              <Route path="/car/:id" element={<CarDetails />} />
+              <Route path="/estimate" element={<CarEstimate />} />
+              <Route path="/advertising" element={<Advertising />} />
+              <Route path="/dealer-account" element={<DealerAccount />} />
+              
+              {/* Authentication Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              
+              {/* User Dashboard Routes */}
+              <Route path="/dashboard" element={<UserDashboard />} />
+              <Route path="/list-car" element={<ListCar />} />
+              <Route path="/payment" element={<Payment />} />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/failed" element={<PaymentFailed />} />
+              
+              {/* Subscription Routes */}
+              <Route path="/subscription-plans" element={<SubscriptionPlans />} />
+              <Route path="/subscription-checkout" element={<SubscriptionCheckout />} />
+              <Route path="/subscription" element={<UserSubscription />} />
+              
+              {/* Legal Pages */}
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/cookies-policy" element={<CookiesPolicy />} />
+              
+              {/* Service Pages */}
+              <Route path="/vehicle-inspection" element={<VehicleInspection />} />
+              <Route path="/car-insurance" element={<CarInsurance />} />
+              <Route path="/car-financing" element={<CarFinancing />} />
+              <Route path="/car-transport" element={<CarTransport />} />
+              <Route path="/vehicle-history-reports" element={<VehicleHistoryReports />} />
+              
+              {/* Booking Pages */}
+              <Route path="/car-booking" element={<CarBooking />} />
+              <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="listings" element={<AdminCarListings />} />
+                <Route path="payments" element={<AdminPayments />} />
+                <Route path="hero" element={<AdminHero />} />
+                <Route path="featured" element={<AdminFeatured />} />
+                <Route path="testimonials" element={<AdminTestimonials />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
+              
+              {/* Catch-all */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

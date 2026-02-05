@@ -139,7 +139,6 @@ const AdminCarListings = () => {
         listing.id === listingId ? { ...listing, status: newStatus as any } : listing
       ));
       
-      console.log(`Admin action: Listing ${listingId} status changed to ${newStatus}`);
     } catch (error) {
       console.error('Failed to update listing status:', error);
     } finally {
@@ -164,7 +163,6 @@ const AdminCarListings = () => {
         listing.id === listingId ? { ...listing, featured: newFeaturedState } : listing
       ));
       
-      console.log(`Admin action: Listing ${listingId} ${newFeaturedState ? 'featured' : 'unfeatured'}`);
     } catch (error) {
       console.error('Failed to toggle featured status:', error);
     } finally {

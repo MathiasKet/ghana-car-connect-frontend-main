@@ -89,7 +89,6 @@ const Payment = () => {
           featuredListing: paymentData.listingData.featuredListing
         },
         callback: (response) => {
-          console.log('Payment callback:', response);
           setCurrentStep(3);
           
           // Store payment data for success/failed pages

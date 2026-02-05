@@ -1,4 +1,4 @@
-import api from './api';
+import { supabase } from '@/lib/supabase';
 
 export interface UploadResponse {
   url: string;
@@ -7,6 +7,8 @@ export interface UploadResponse {
   size: number;
   mimeType: string;
 }
+
+const BUCKET_NAME = 'car-images';
 
 export class UploadService {
   private static instance: UploadService;
@@ -20,38 +22,36 @@ export class UploadService {
 
   // Upload single image
   async uploadImage(file: File): Promise<UploadResponse> {
-    const formData = new FormData();
-    formData.append('image', file);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
 
-    const response = await api.post('/upload/image', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress: (progressEvent) => {
-        const progress = Math.round(
-          (progressEvent.loaded * 100) / progressEvent.total!
-        );
-        console.log(`Upload progress: ${progress}%`);
-      },
-    });
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
 
-    return response.data;
+    if (error) throw new Error(`Upload failed: ${error.message}`);
+
+    const { data: urlData } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(data.path);
+
+    return {
+      url: urlData.publicUrl,
+      publicId: data.path,
+      originalName: file.name,
+      size: file.size,
+      mimeType: file.type,
+    };
   }
 
   // Upload multiple images
   async uploadImages(files: File[]): Promise<UploadResponse[]> {
-    const formData = new FormData();
-    files.forEach((file, index) => {
-      formData.append(`images`, file);
-    });
-
-    const response = await api.post('/upload/images', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-
-    return response.data;
+    const results = await Promise.all(files.map(file => this.uploadImage(file)));
+    return results;
   }
 
   // Upload car images with validation
@@ -72,27 +72,54 @@ export class UploadService {
       throw new Error('Invalid image file. Please use JPG, PNG, or WebP format under 2MB.');
     }
 
-    const formData = new FormData();
-    formData.append('avatar', file);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `avatar-${Date.now()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
 
-    const response = await api.post('/upload/avatar', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      });
 
-    return response.data;
+    if (error) throw new Error(`Avatar upload failed: ${error.message}`);
+
+    const { data: urlData } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(data.path);
+
+    return {
+      url: urlData.publicUrl,
+      publicId: data.path,
+      originalName: file.name,
+      size: file.size,
+      mimeType: file.type,
+    };
   }
 
   // Delete uploaded file
   async deleteFile(publicId: string): Promise<void> {
-    await api.delete('/upload/file', { data: { publicId } });
+    const { error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .remove([publicId]);
+
+    if (error) throw new Error(`Delete failed: ${error.message}`);
   }
 
   // Get file info
   async getFileInfo(publicId: string): Promise<UploadResponse> {
-    const response = await api.get(`/upload/file/${publicId}`);
-    return response.data;
+    const { data: urlData } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(publicId);
+
+    return {
+      url: urlData.publicUrl,
+      publicId,
+      originalName: publicId.split('/').pop() || '',
+      size: 0,
+      mimeType: '',
+    };
   }
 
   // Validate image file

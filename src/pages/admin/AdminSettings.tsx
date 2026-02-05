@@ -49,12 +49,10 @@ const AdminSettings = () => {
 
   const handleSave = () => {
     // Save settings logic here
-    console.log('Settings saved:', settings);
   };
 
   const handleReset = () => {
     // Reset settings logic here
-    console.log('Settings reset to default');
   };
 
   return (

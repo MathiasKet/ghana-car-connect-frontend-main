@@ -122,7 +122,6 @@ const UserDashboard = () => {
     try {
       const listings = await api.getUserCars(supabaseUser.id);
       setCarListings(listings);
-      console.log('Refreshed listings from Supabase');
     } catch (error) {
       console.error('Failed to refresh listings:', error);
     }
@@ -134,7 +133,6 @@ const UserDashboard = () => {
     try {
       const payments = await api.getUserPaymentHistory(supabaseUser.id);
       setPayments(payments);
-      console.log('Refreshed payments from Supabase');
     } catch (error) {
       console.error('Failed to refresh payments:', error);
     }
@@ -146,7 +144,6 @@ const UserDashboard = () => {
     try {
       const subscription = await api.getUserSubscription(supabaseUser.id);
       setSubscription(subscription);
-      console.log('Refreshed subscription from Supabase');
     } catch (error) {
       console.error('Failed to refresh subscription:', error);
     }
@@ -172,7 +169,6 @@ const UserDashboard = () => {
   // Auto-refresh on relevant events
   useEffect(() => {
     if (lastUpdate) {
-      console.log('Real-time update received:', lastUpdate);
       
       // Refresh data based on event type
       switch (lastUpdate.eventType) {
