@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   Menu,
   User,
   Car,
@@ -11,24 +11,15 @@ import {
   X,
   Users
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const { user, signOut } = useSupabaseAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
-
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    localStorage.removeItem('user');
-    setUser(null);
+    await signOut();
     navigate('/');
   };
 
@@ -56,6 +47,14 @@ const Header = () => {
         <div className="hidden md:flex md:items-center md:space-x-4">
           {user ? (
             <>
+              {user.role === 'admin' && (
+                <Link to="/admin">
+                  <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10">
+                    <Users className="h-4 w-4 mr-2" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
               <Link to="/dashboard">
                 <Button variant="ghost" size="sm">
                   <User className="h-4 w-4 mr-2" />
@@ -85,8 +84,8 @@ const Header = () => {
         </div>
 
         {/* Mobile Menu Button */}
-        <button 
-          className="p-2 md:hidden" 
+        <button
+          className="p-2 md:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Menu"
         >
@@ -99,54 +98,61 @@ const Header = () => {
       </div>
 
       {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col pt-16 bg-white md:hidden">
-          <div className="container px-4 py-6">
-            <nav className="flex flex-col space-y-4">
-              <Link to="/buy" className="flex items-center py-2 text-lg font-medium border-b">
-                <Search className="w-5 h-5 mr-3" /> Buy Cars
-              </Link>
-              <Link to="/rent" className="flex items-center py-2 text-lg font-medium border-b">
-                <Car className="w-5 h-5 mr-3" /> Rent a Car
-              </Link>
-              <Link to="/sell" className="flex items-center py-2 text-lg font-medium border-b">
-                <Menu className="w-5 h-5 mr-3" /> Sell Your Car
-              </Link>
-              <Link to="/about" className="flex items-center py-2 text-lg font-medium border-b">
-                <Users className="w-5 h-5 mr-3" /> About Us
-              </Link>
-              {user ? (
-                <>
-                  <Link to="/dashboard" className="flex items-center py-2 text-lg font-medium border-b">
-                    <User className="w-5 h-5 mr-3" /> Dashboard
-                  </Link>
-                  <button 
-                    onClick={handleLogout}
-                    className="flex items-center py-2 text-lg font-medium border-b text-left"
-                  >
-                    <X className="w-5 h-5 mr-3" /> Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="flex items-center py-2 text-lg font-medium border-b">
-                    <User className="w-5 h-5 mr-3" /> Sign In
-                  </Link>
-                  <Link to="/register" className="flex items-center py-2 text-lg font-medium border-b">
-                    <User className="w-5 h-5 mr-3" /> Sign Up
-                  </Link>
-                </>
-              )}
-            </nav>
-            <div className="mt-8">
-              <Link to={user ? "/list-car" : "/register"}>
-                <Button className="w-full">List Your Car</Button>
-              </Link>
+      {
+        isMenuOpen && (
+          <div className="fixed inset-0 z-50 flex flex-col pt-16 bg-white md:hidden">
+            <div className="container px-4 py-6">
+              <nav className="flex flex-col space-y-4">
+                <Link to="/buy" className="flex items-center py-2 text-lg font-medium border-b">
+                  <Search className="w-5 h-5 mr-3" /> Buy Cars
+                </Link>
+                <Link to="/rent" className="flex items-center py-2 text-lg font-medium border-b">
+                  <Car className="w-5 h-5 mr-3" /> Rent a Car
+                </Link>
+                <Link to="/sell" className="flex items-center py-2 text-lg font-medium border-b">
+                  <Menu className="w-5 h-5 mr-3" /> Sell Your Car
+                </Link>
+                <Link to="/about" className="flex items-center py-2 text-lg font-medium border-b">
+                  <Users className="w-5 h-5 mr-3" /> About Us
+                </Link>
+                {user ? (
+                  <>
+                    {user.role === 'admin' && (
+                      <Link to="/admin" className="flex items-center py-2 text-lg font-medium border-b text-primary">
+                        <Users className="w-5 h-5 mr-3" /> Admin Panel
+                      </Link>
+                    )}
+                    <Link to="/dashboard" className="flex items-center py-2 text-lg font-medium border-b">
+                      <User className="w-5 h-5 mr-3" /> Dashboard
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center py-2 text-lg font-medium border-b text-left"
+                    >
+                      <X className="w-5 h-5 mr-3" /> Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="flex items-center py-2 text-lg font-medium border-b">
+                      <User className="w-5 h-5 mr-3" /> Sign In
+                    </Link>
+                    <Link to="/register" className="flex items-center py-2 text-lg font-medium border-b">
+                      <User className="w-5 h-5 mr-3" /> Sign Up
+                    </Link>
+                  </>
+                )}
+              </nav>
+              <div className="mt-8">
+                <Link to={user ? "/list-car" : "/register"}>
+                  <Button className="w-full">List Your Car</Button>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </header>
+        )
+      }
+    </header >
   );
 };
 

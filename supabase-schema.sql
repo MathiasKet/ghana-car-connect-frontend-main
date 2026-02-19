@@ -153,6 +153,9 @@ CREATE POLICY "Users can view own profile" ON public.users
 CREATE POLICY "Users can update own profile" ON public.users
   FOR UPDATE USING (auth.uid() = id);
 
+CREATE POLICY "Users can insert own profile" ON public.users
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
 CREATE POLICY "Admins can view all users" ON public.users
   FOR SELECT USING (
     EXISTS (
@@ -237,12 +240,20 @@ CREATE POLICY "Users can update own inquiries" ON public.inquiries
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, email, name, phone)
+  INSERT INTO public.users (id, email, name, phone, role, is_verified)
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'name', 'User'),
-    NEW.raw_user_meta_data->>'phone'
+    NEW.raw_user_meta_data->>'phone',
+    CASE 
+      WHEN NEW.email = 'mrkett25@gmail.com' THEN 'admin'
+      ELSE 'user'
+    END,
+    CASE 
+      WHEN NEW.email = 'mrkett25@gmail.com' THEN true
+      ELSE false
+    END
   );
   RETURN NEW;
 END;

@@ -17,19 +17,22 @@ const Login = () => {
     rememberMe: false
   });
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const navigate = useNavigate();
-  const { signIn, loading, error, isAuthenticated } = useSupabaseAuth();
+  const { signIn, loading, error, isAuthenticated, user } = useSupabaseAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Prevent multiple submissions
     if (loading) return;
 
     try {
       const result = await signIn(formData.email, formData.password);
-      // Navigation will happen automatically when isAuthenticated becomes true
+
+      if (result.success && result.data?.user) {
+        // Standard users go to dashboard
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -37,15 +40,15 @@ const Login = () => {
 
   // Navigate when user becomes authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      // Add a small delay to prevent navigation throttling
+    if (isAuthenticated && user) {
       const timer = setTimeout(() => {
+        // Default destination for public login
         navigate('/dashboard');
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -130,8 +133,8 @@ const Login = () => {
                   <Checkbox
                     id="remember"
                     checked={formData.rememberMe}
-                    onCheckedChange={(checked) => 
-                      setFormData(prev => ({...prev, rememberMe: checked as boolean}))
+                    onCheckedChange={(checked) =>
+                      setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
                     }
                   />
                   <Label htmlFor="remember" className="text-sm">Remember me</Label>

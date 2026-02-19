@@ -37,7 +37,7 @@ class SupabaseAuthService {
   constructor() {
     // Initialize auth state
     this.initializeAuth();
-    
+
     // Listen for auth changes
     supabase.auth.onAuthStateChange((event, session) => {
       this.handleAuthChange(event, session);
@@ -48,7 +48,7 @@ class SupabaseAuthService {
     try {
       this.setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session?.user) {
         await this.loadUserProfile(session.user.id);
       } else {
@@ -62,7 +62,7 @@ class SupabaseAuthService {
   }
 
   private async handleAuthChange(event: string, session: any) {
-    
+
     if (session?.user) {
       await this.loadUserProfile(session.user.id);
     } else {
@@ -76,7 +76,7 @@ class SupabaseAuthService {
         .from('users')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error loading user profile:', error);
@@ -85,7 +85,10 @@ class SupabaseAuthService {
       }
 
       this.setUser(profile);
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === 'AbortError' || error?.message?.includes('signal is aborted')) {
+        return;
+      }
       console.error('Error loading user profile:', error);
       this.setError('Failed to load user profile');
     }

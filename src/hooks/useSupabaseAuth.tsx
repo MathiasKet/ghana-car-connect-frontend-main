@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AuthUser, AuthState } from '@/services/supabaseAuth';
 import api from '@/services/api';
+import SupabaseService from '@/services/supabaseService';
 
 export const useSupabaseAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -42,20 +43,25 @@ export const useSupabaseAuth = () => {
           setAuthState({ user: null, loading: false, error: null });
           return;
         }
-        
+
         if (session?.user) {
           currentUserIdRef.current = session.user.id;
+
+          // Fetch real profile from database to get the latest role
+          const { profile } = await SupabaseService.getCurrentUser();
+
           const user: AuthUser = {
             id: session.user.id,
             email: session.user.email || '',
-            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-            phone: session.user.user_metadata?.phone,
-            role: session.user.user_metadata?.role || 'user',
-            avatar_url: session.user.user_metadata?.avatar_url,
-            is_active: true,
-            is_verified: session.user.user_metadata?.is_verified || false,
+            name: profile?.name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+            phone: profile?.phone || session.user.user_metadata?.phone,
+            role: profile?.role || session.user.user_metadata?.role || 'user',
+            avatar_url: profile?.avatar_url || session.user.user_metadata?.avatar_url,
+            is_active: profile?.is_active ?? true,
+            is_verified: profile?.is_verified || session.user.user_metadata?.is_verified || false,
           };
           localStorage.setItem('user', JSON.stringify(user));
+          console.log('useSupabaseAuth: Initial session loaded. User:', user.email, 'Role:', user.role);
           setAuthState({ user, loading: false, error: null });
         } else {
           currentUserIdRef.current = null;
@@ -79,25 +85,28 @@ export const useSupabaseAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        
+
         // Prevent rapid state changes by debouncing
         if (event === 'INITIAL_SESSION') {
           // Only process if the session actually changed
           const newUserId = session?.user?.id;
-          
+
           if (currentUserIdRef.current !== newUserId) {
             currentUserIdRef.current = newUserId;
-            
+
             if (session?.user) {
+              // Fetch real profile from database to get the latest role
+              const { profile } = await SupabaseService.getCurrentUser();
+
               const user: AuthUser = {
                 id: session.user.id,
                 email: session.user.email || '',
-                name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-                phone: session.user.user_metadata?.phone,
-                role: session.user.user_metadata?.role || 'user',
-                avatar_url: session.user.user_metadata?.avatar_url,
-                is_active: true,
-                is_verified: session.user.user_metadata?.is_verified || false,
+                name: profile?.name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+                phone: profile?.phone || session.user.user_metadata?.phone,
+                role: profile?.role || session.user.user_metadata?.role || 'user',
+                avatar_url: profile?.avatar_url || session.user.user_metadata?.avatar_url,
+                is_active: profile?.is_active ?? true,
+                is_verified: profile?.is_verified || session.user.user_metadata?.is_verified || false,
               };
               setAuthState({ user, loading: false, error: null });
             } else {
@@ -108,25 +117,30 @@ export const useSupabaseAuth = () => {
           // Handle successful sign in
           if (session?.user) {
             currentUserIdRef.current = session.user.id;
+
+            // Wait a tiny bit for the database trigger if it's a new user, 
+            // but for existing users this will fetch the latest role
+            const { profile } = await SupabaseService.getCurrentUser();
+
             const user: AuthUser = {
               id: session.user.id,
               email: session.user.email || '',
-              name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-              phone: session.user.user_metadata?.phone,
-              role: session.user.user_metadata?.role || 'user',
-              avatar_url: session.user.user_metadata?.avatar_url,
-              is_active: true,
-              is_verified: session.user.user_metadata?.is_verified || false,
+              name: profile?.name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+              phone: profile?.phone || session.user.user_metadata?.phone,
+              role: profile?.role || session.user.user_metadata?.role || 'user',
+              avatar_url: profile?.avatar_url || session.user.user_metadata?.avatar_url,
+              is_active: profile?.is_active ?? true,
+              is_verified: profile?.is_verified || session.user.user_metadata?.is_verified || false,
             };
             localStorage.setItem('user', JSON.stringify(user));
+            console.log('useSupabaseAuth: SIGNED_IN event. User:', user.email, 'Role:', user.role);
             setAuthState({ user, loading: false, error: null });
-            
+
             // Create Basic subscription for new users (with error handling)
             try {
               await createBasicSubscriptionForUser(session.user.id);
             } catch (error) {
               console.error('Failed to create basic subscription:', error);
-              // Don't block login for subscription creation failure
             }
           }
         } else if (event === 'SIGNED_OUT') {
@@ -160,6 +174,9 @@ export const useSupabaseAuth = () => {
 
       return { success: true, data };
     } catch (error: any) {
+      if (error?.name === 'AbortError' || error?.message?.includes('signal is aborted')) {
+        return { success: false, error: null };
+      }
       const message = error.message || 'Failed to sign up';
       setAuthState(prev => ({ ...prev, error: message }));
       return { success: false, error: message };
@@ -181,9 +198,13 @@ export const useSupabaseAuth = () => {
       }
 
       // Auth state will be updated by the listener
+      console.log('SignIn successful, returned data:', !!data.user);
       setAuthState(prev => ({ ...prev, loading: false }));
       return { success: true, data };
     } catch (error: any) {
+      if (error?.name === 'AbortError' || error?.message?.includes('signal is aborted')) {
+        return { success: false, error: null };
+      }
       const message = error.message || 'Failed to sign in';
       setAuthState(prev => ({ ...prev, loading: false, error: message }));
       return { success: false, error: message };
@@ -224,7 +245,7 @@ export const useSupabaseAuth = () => {
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email);
-      
+
       if (error) {
         setAuthState(prev => ({ ...prev, error: error.message }));
         return { success: false, error: error.message };
@@ -241,7 +262,7 @@ export const useSupabaseAuth = () => {
   const updatePassword = async (newPassword: string) => {
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-      
+
       if (error) {
         setAuthState(prev => ({ ...prev, error: error.message }));
         return { success: false, error: error.message };
@@ -275,7 +296,7 @@ export const useSupabaseAuth = () => {
     user: authState.user,
     loading: authState.loading,
     error: authState.error,
-    
+
     // Auth methods
     signUp,
     signIn,
@@ -283,11 +304,11 @@ export const useSupabaseAuth = () => {
     signOut,
     resetPassword,
     updatePassword,
-    
+
     // Profile methods
     updateProfile,
     uploadAvatar,
-    
+
     // Utility methods
     getToken,
     isAuthenticated: !!authState.user,
@@ -295,7 +316,7 @@ export const useSupabaseAuth = () => {
     isDealer: authState.user?.role === 'dealer',
     isVerified: authState.user?.is_verified || false,
     isActive: authState.user?.is_active || false,
-    
+
     // Raw auth service access
     authService: null, // Removed to avoid circular dependency
   };

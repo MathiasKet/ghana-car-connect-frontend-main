@@ -25,11 +25,14 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
-  
+
   const { signUp, loading, error, isAuthenticated } = useSupabaseAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent multiple submissions
+    if (loading) return;
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
@@ -61,7 +64,7 @@ const Register = () => {
       const timer = setTimeout(() => {
         navigate('/dashboard');
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, navigate]);
@@ -168,7 +171,7 @@ const Register = () => {
                 <Label htmlFor="location">Location</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Select onValueChange={(value) => setFormData({...formData, location: value})}>
+                  <Select onValueChange={(value) => setFormData({ ...formData, location: value })}>
                     <SelectTrigger className="pl-10">
                       <SelectValue placeholder="Select your location" />
                     </SelectTrigger>
@@ -236,8 +239,8 @@ const Register = () => {
                 <Checkbox
                   id="terms"
                   checked={formData.agreeToTerms}
-                  onCheckedChange={(checked) => 
-                    setFormData({...formData, agreeToTerms: checked as boolean})
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, agreeToTerms: checked as boolean })
                   }
                 />
                 <Label htmlFor="terms" className="text-sm">

@@ -8,10 +8,10 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Save, 
-  Plus, 
-  Trash2, 
+import {
+  Save,
+  Plus,
+  Trash2,
   Edit,
   RefreshCw,
   MessageSquare,
@@ -34,44 +34,7 @@ interface Testimonial {
   dateAdded: string;
 }
 
-const defaultTestimonials: Testimonial[] = [
-  {
-    id: '1',
-    name: 'Kwame Asante',
-    role: 'Business Owner',
-    company: 'Accra Logistics Ltd',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    rating: 5,
-    content: 'CarConnect Ghana made it so easy to find the perfect vehicle for my business. The process was smooth, and the customer service was exceptional. Highly recommended!',
-    featured: true,
-    verified: true,
-    dateAdded: '2024-01-15'
-  },
-  {
-    id: '2',
-    name: 'Adjoa Mensah',
-    role: 'Marketing Manager',
-    company: 'Tech Ghana',
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
-    rating: 5,
-    content: 'I rented a car for a business trip and was impressed by the quality and service. The vehicle was clean, well-maintained, and the booking process was seamless.',
-    featured: true,
-    verified: true,
-    dateAdded: '2024-01-10'
-  },
-  {
-    id: '3',
-    name: 'Kojo Bonsu',
-    role: 'Software Developer',
-    company: 'Digital Solutions',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-    rating: 4,
-    content: 'Sold my car through CarConnect Ghana and got a great price. The platform connected me with serious buyers quickly. The whole process took less than a week!',
-    featured: false,
-    verified: true,
-    dateAdded: '2024-01-05'
-  }
-];
+const defaultTestimonials: Testimonial[] = [];
 
 const AdminTestimonials = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials);
@@ -143,10 +106,10 @@ const AdminTestimonials = () => {
     }
 
     let updatedTestimonials: Testimonial[];
-    
+
     if (editingTestimonial) {
-      updatedTestimonials = testimonials.map(testimonial => 
-        testimonial.id === editingTestimonial.id 
+      updatedTestimonials = testimonials.map(testimonial =>
+        testimonial.id === editingTestimonial.id
           ? { ...formData, id: editingTestimonial.id } as Testimonial
           : testimonial
       );
@@ -188,11 +151,10 @@ const AdminTestimonials = () => {
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`h-4 w-4 ${
-              star <= rating 
-                ? 'text-yellow-400 fill-current' 
+            className={`h-4 w-4 ${star <= rating
+                ? 'text-yellow-400 fill-current'
                 : 'text-gray-300'
-            } ${interactive ? 'cursor-pointer hover:text-yellow-400' : ''}`}
+              } ${interactive ? 'cursor-pointer hover:text-yellow-400' : ''}`}
             onClick={() => interactive && onChange && onChange(star)}
           />
         ))}
@@ -267,7 +229,7 @@ const AdminTestimonials = () => {
                 <div className="col-span-2">
                   <Label>Rating</Label>
                   <div className="flex items-center space-x-2">
-                    {renderStars(formData.rating || 5, true, (rating) => 
+                    {renderStars(formData.rating || 5, true, (rating) =>
                       setFormData(prev => ({ ...prev, rating }))
                     )}
                     <span className="text-sm text-gray-600">({formData.rating || 5} stars)</span>
@@ -366,7 +328,7 @@ const AdminTestimonials = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Avg Rating</p>
                 <p className="text-2xl font-bold">
-                  {testimonials.length > 0 
+                  {testimonials.length > 0
                     ? (testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length).toFixed(1)
                     : '0.0'
                   }
@@ -429,16 +391,16 @@ const AdminTestimonials = () => {
                 </div>
 
                 <div className="flex space-x-2 pt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex-1"
                     onClick={() => toggleFeatured(testimonial.id)}
                   >
                     {testimonial.featured ? 'Remove Featured' : 'Make Featured'}
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => toggleVerified(testimonial.id)}
                   >

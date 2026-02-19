@@ -101,43 +101,87 @@ class ApiService {
     return await supabaseApi.uploadImage(file, type);
   }
 
+  private getBaseUrl() {
+    return import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  }
+
   // Generic HTTP methods for external API calls
   async get(url: string, config?: RequestInit) {
-    const response = await fetch(url, config);
+    const fullUrl = url.startsWith('http') ? url : `${this.getBaseUrl()}${url}`;
+    const response = await fetch(fullUrl, {
+      ...config,
+      headers: {
+        'Accept': 'application/json',
+        ...config?.headers,
+      },
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `API error: ${response.status}`);
+    }
+    
     return response.json();
   }
 
   async post(url: string, data?: unknown, config?: RequestInit) {
-    const response = await fetch(url, {
+    const fullUrl = url.startsWith('http') ? url : `${this.getBaseUrl()}${url}`;
+    const response = await fetch(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         ...config?.headers,
       },
       body: JSON.stringify(data),
       ...config,
     });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `API error: ${response.status}`);
+    }
+    
     return response.json();
   }
 
   async put(url: string, data?: unknown, config?: RequestInit) {
-    const response = await fetch(url, {
+    const fullUrl = url.startsWith('http') ? url : `${this.getBaseUrl()}${url}`;
+    const response = await fetch(fullUrl, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         ...config?.headers,
       },
       body: JSON.stringify(data),
       ...config,
     });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `API error: ${response.status}`);
+    }
+    
     return response.json();
   }
 
   async delete(url: string, config?: RequestInit) {
-    const response = await fetch(url, {
+    const fullUrl = url.startsWith('http') ? url : `${this.getBaseUrl()}${url}`;
+    const response = await fetch(fullUrl, {
       method: 'DELETE',
+      headers: {
+        'Accept': 'application/json',
+        ...config?.headers,
+      },
       ...config,
     });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `API error: ${response.status}`);
+    }
+    
     return response.json();
   }
 

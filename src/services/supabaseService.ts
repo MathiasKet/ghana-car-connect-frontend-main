@@ -27,9 +27,9 @@ export class SupabaseService {
 
       if (error) throw error;
 
-      // Create user profile
+      // Create user profile (using upsert in case trigger already ran)
       if (data.user) {
-        await supabase.from('users').insert({
+        await supabase.from('users').upsert({
           id: data.user.id,
           email: data.user.email!,
           name,
@@ -37,7 +37,7 @@ export class SupabaseService {
           role: 'user',
           is_verified: false,
           is_active: true,
-        });
+        }, { onConflict: 'id' });
       }
 
       return data;
@@ -78,44 +78,62 @@ export class SupabaseService {
       if (error) throw error;
 
       if (user) {
+        // Fetch real profile from database
         const { data: profile, error: profileError } = await supabase
           .from('users')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (profileError || !profile) {
+        if (profileError) {
+          console.error('SupabaseService: Error fetching profile:', profileError);
+        }
+
+        if (!profile) {
+          console.warn('SupabaseService: Profile missing for user:', user.email, 'Attempting auto-creation...');
+
           // Auto-create profile if missing
+          const isOfficialAdmin = user.email === 'mrkett25@gmail.com';
           const newProfile = {
             id: user.id,
             email: user.email!,
-            name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            name: user.user_metadata?.name || user.email?.split('@')[0] || 'Admin',
             phone: user.user_metadata?.phone || null,
-            role: user.user_metadata?.role || 'user',
-            is_verified: false,
+            role: isOfficialAdmin ? 'admin' : (user.user_metadata?.role || 'user'),
+            is_verified: isOfficialAdmin, // Auto-verify the official admin
             is_active: true,
           };
 
+          console.log(`SupabaseService: Creating new profile. Email: ${user.email}, Role: ${newProfile.role}`);
+
           const { data: createdProfile, error: insertError } = await supabase
             .from('users')
-            .upsert(newProfile, { onConflict: 'id' })
+            .upsert(newProfile, {
+              onConflict: 'id',
+              ignoreDuplicates: false
+            })
             .select()
-            .single();
+            .maybeSingle();
 
           if (insertError) {
-            console.error('Failed to create user profile:', insertError);
-            // Return a fallback profile so the app doesn't crash
+            console.error('SupabaseService: Failed to create user profile in DB:', insertError);
+            // Return a fallback profile object so the app can still function with metadata-based role
             return { user, profile: newProfile };
           }
 
+          console.log('SupabaseService: Profile created successfully in DB. Role:', createdProfile?.role);
           return { user, profile: createdProfile };
         }
 
+        console.log('SupabaseService: Profile found in DB. Role:', profile.role);
         return { user, profile };
       }
 
       return { user: null, profile: null };
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === 'AbortError' || error?.message?.includes('signal is aborted')) {
+        return { user: null, profile: null };
+      }
       console.error('Get current user error:', error);
       throw error;
     }
@@ -180,7 +198,7 @@ export class SupabaseService {
           )
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -297,7 +315,7 @@ export class SupabaseService {
         .from('payments')
         .select('*')
         .eq('reference', reference)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -416,9 +434,9 @@ export class SupabaseService {
         .select('*')
         .eq('user_id', userId)
         .eq('status', 'active')
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       return data;
     } catch (error) {
       console.error('Get user subscription error:', error);

@@ -55,6 +55,7 @@ const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminCarListings = lazy(() => import("./pages/admin/AdminCarListings"));
 const AdminPayments = lazy(() => import("./pages/admin/AdminPayments"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 
 // Loading fallback
 const PageLoader = () => (
@@ -77,7 +78,7 @@ const App = () => (
           <p><strong>Component Stack:</strong></p>
           <pre>{componentStack}</pre>
         </details>
-        <button 
+        <button
           onClick={resetError}
           style={{
             marginTop: '20px',
@@ -98,7 +99,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <HotToaster 
+        <HotToaster
           position="top-right"
           toastOptions={{
             duration: 4000,
@@ -126,7 +127,7 @@ const App = () => (
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
-              
+
               {/* Main Navigation Routes */}
               <Route path="/buy" element={<Buy />} />
               <Route path="/rent" element={<Rent />} />
@@ -140,40 +141,41 @@ const App = () => (
               <Route path="/estimate" element={<CarEstimate />} />
               <Route path="/advertising" element={<Advertising />} />
               <Route path="/dealer-account" element={<DealerAccount />} />
-              
+
               {/* Authentication Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              
+
               {/* User Dashboard Routes */}
               <Route path="/dashboard" element={<UserDashboard />} />
               <Route path="/list-car" element={<ListCar />} />
               <Route path="/payment" element={<Payment />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/payment/failed" element={<PaymentFailed />} />
-              
+
               {/* Subscription Routes */}
               <Route path="/subscription-plans" element={<SubscriptionPlans />} />
               <Route path="/subscription-checkout" element={<SubscriptionCheckout />} />
               <Route path="/subscription" element={<UserSubscription />} />
-              
+
               {/* Legal Pages */}
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/cookies-policy" element={<CookiesPolicy />} />
-              
+
               {/* Service Pages */}
               <Route path="/vehicle-inspection" element={<VehicleInspection />} />
               <Route path="/car-insurance" element={<CarInsurance />} />
               <Route path="/car-financing" element={<CarFinancing />} />
               <Route path="/car-transport" element={<CarTransport />} />
               <Route path="/vehicle-history-reports" element={<VehicleHistoryReports />} />
-              
+
               {/* Booking Pages */}
               <Route path="/car-booking" element={<CarBooking />} />
               <Route path="/booking-confirmation" element={<BookingConfirmation />} />
-              
+
               {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
@@ -184,7 +186,7 @@ const App = () => (
                 <Route path="testimonials" element={<AdminTestimonials />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
-              
+
               {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>

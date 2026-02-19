@@ -8,10 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  Save, 
-  Plus, 
-  Trash2, 
+import {
+  Save,
+  Plus,
+  Trash2,
   Edit,
   Eye,
   RefreshCw,
@@ -52,58 +52,7 @@ interface FeaturedCar {
   available?: boolean;
 }
 
-const defaultCars: FeaturedCar[] = [
-  {
-    id: '1',
-    make: 'Toyota',
-    model: 'Camry',
-    year: 2022,
-    price: 85000,
-    location: 'Accra',
-    mileage: 15000,
-    transmission: 'Automatic',
-    fuelType: 'Petrol',
-    condition: 'Excellent',
-    description: 'Well-maintained Toyota Camry with full service history. Perfect for family use.',
-    images: ['https://images.unsplash.com/photo-1550355291-bbee04a92027?w=800&h=600&fit=crop'],
-    featured: true,
-    category: 'buy'
-  },
-  {
-    id: '2',
-    make: 'Honda',
-    model: 'CR-V',
-    year: 2023,
-    price: 120000,
-    location: 'Kumasi',
-    mileage: 8000,
-    transmission: 'Automatic',
-    fuelType: 'Petrol',
-    condition: 'Like New',
-    description: 'Nearly new Honda CR-V SUV with advanced safety features and great fuel economy.',
-    images: ['https://images.unsplash.com/photo-1617654112368-307921291f42?w=800&h=600&fit=crop'],
-    featured: true,
-    category: 'buy'
-  },
-  {
-    id: '3',
-    make: 'Nissan',
-    model: 'Sentra',
-    year: 2021,
-    price: 75000,
-    location: 'Takoradi',
-    mileage: 25000,
-    transmission: 'Manual',
-    fuelType: 'Petrol',
-    condition: 'Good',
-    description: 'Reliable Nissan Sentra, great for daily commuting with excellent fuel efficiency.',
-    images: ['https://images.unsplash.com/photo-1583121274602-3e2820c6f664?w=800&h=600&fit=crop'],
-    featured: true,
-    category: 'rent',
-    rentalPrice: 150,
-    available: true
-  }
-];
+const defaultCars: FeaturedCar[] = [];
 
 const AdminFeatured = () => {
   const [cars, setCars] = useState<FeaturedCar[]>(defaultCars);
@@ -187,10 +136,10 @@ const AdminFeatured = () => {
     }
 
     let updatedCars: FeaturedCar[];
-    
+
     if (editingCar) {
-      updatedCars = cars.map(car => 
-        car.id === editingCar.id 
+      updatedCars = cars.map(car =>
+        car.id === editingCar.id
           ? { ...formData, id: editingCar.id } as FeaturedCar
           : car
       );
@@ -469,19 +418,19 @@ const AdminFeatured = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Multiple Images Indicator */}
                 {car.images && car.images.length > 1 && (
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-gray-500">+{car.images.length - 1} more images</span>
                   </div>
                 )}
-                
+
                 <div>
                   <h3 className="font-semibold text-lg">{car.make} {car.model}</h3>
                   <p className="text-sm text-gray-600">{car.year} • {car.transmission}</p>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-1 text-sm text-gray-600">
                     <MapPin className="h-4 w-4" />
@@ -514,17 +463,17 @@ const AdminFeatured = () => {
                 </div>
 
                 <div className="flex space-x-2 pt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex-1"
                     onClick={() => toggleFeatured(car.id)}
                   >
                     {car.featured ? 'Remove Featured' : 'Make Featured'}
                   </Button>
                   {car.category === 'rent' && (
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => toggleAvailable(car.id)}
                     >

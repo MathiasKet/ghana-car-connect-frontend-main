@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Home, 
-  Car, 
-  MessageSquare, 
-  Settings, 
+import {
+  Home,
+  Car,
+  MessageSquare,
+  Settings,
   TrendingUp,
   Users,
   Eye,
@@ -24,8 +24,8 @@ const AdminDashboard = () => {
   const stats = [
     {
       title: 'Total Users',
-      value: '1,234',
-      change: '+12% from last month',
+      value: '0',
+      change: '0% from last month',
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -33,8 +33,8 @@ const AdminDashboard = () => {
     },
     {
       title: 'Active Listings',
-      value: '156',
-      change: '+8 from last week',
+      value: '0',
+      change: '+0 from last week',
       icon: Car,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
@@ -42,8 +42,8 @@ const AdminDashboard = () => {
     },
     {
       title: 'Total Revenue',
-      value: 'GHS 12,450',
-      change: '+18% from last month',
+      value: 'GHS 0.00',
+      change: '0% from last month',
       icon: DollarSign,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
@@ -51,8 +51,8 @@ const AdminDashboard = () => {
     },
     {
       title: 'Pending Listings',
-      value: '23',
-      change: '-3 from yesterday',
+      value: '0',
+      change: '0 from yesterday',
       icon: Clock,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
@@ -91,48 +91,7 @@ const AdminDashboard = () => {
     }
   ];
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'user_registered',
-      message: 'New user registered: John Doe',
-      time: '2 minutes ago',
-      icon: Users,
-      color: 'text-blue-600'
-    },
-    {
-      id: 2,
-      type: 'listing_created',
-      message: 'New car listing: Toyota Camry 2020',
-      time: '15 minutes ago',
-      icon: Car,
-      color: 'text-green-600'
-    },
-    {
-      id: 3,
-      type: 'payment_received',
-      message: 'Payment received: GHS 50 for listing fee',
-      time: '1 hour ago',
-      icon: CreditCard,
-      color: 'text-purple-600'
-    },
-    {
-      id: 4,
-      type: 'listing_approved',
-      message: 'Car listing approved: Honda CR-V 2021',
-      time: '2 hours ago',
-      icon: CheckCircle,
-      color: 'text-green-600'
-    },
-    {
-      id: 5,
-      type: 'payment_failed',
-      message: 'Payment failed: GHS 150 transaction',
-      time: '3 hours ago',
-      icon: AlertCircle,
-      color: 'text-red-600'
-    }
-  ];
+  const recentActivity: any[] = [];
 
   return (
     <div className="space-y-6">

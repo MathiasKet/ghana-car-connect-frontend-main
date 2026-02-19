@@ -17,11 +17,11 @@ const Footer = () => {
                 <span className="text-white ml-1">Ghana</span>
               </span>
             </div>
-            
+
             <p className="text-gray-400 mb-6">
               The trusted automotive marketplace connecting car buyers, sellers, and renters across Ghana.
             </p>
-            
+
             <div className="flex space-x-4">
               <a href="#" className="hover:text-primary">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -40,7 +40,7 @@ const Footer = () => {
               </a>
             </div>
           </div>
-          
+
           {/* Quick Links */}
           <div>
             <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
@@ -52,7 +52,7 @@ const Footer = () => {
               <li><Link to="/advertising" className="text-gray-400 hover:text-white">Latest Offers</Link></li>
             </ul>
           </div>
-          
+
           {/* Services */}
           <div>
             <h3 className="text-lg font-semibold mb-6">Services</h3>
@@ -64,7 +64,7 @@ const Footer = () => {
               <li><Link to="/vehicle-history-reports" className="text-gray-400 hover:text-white">Vehicle History Reports</Link></li>
             </ul>
           </div>
-          
+
           {/* Contact */}
           <div>
             <h3 className="text-lg font-semibold mb-6">Contact Us</h3>
@@ -78,17 +78,18 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        
+
         <div className="pt-8 mt-8 border-t border-gray-800">
           <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
             <p className="text-sm text-gray-400">
               &copy; {new Date().getFullYear()} CarConnect Ghana. All rights reserved.
             </p>
-            
+
             <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-400">
               <Link to="/privacy-policy" className="hover:text-white">Privacy Policy</Link>
               <Link to="/terms-of-service" className="hover:text-white">Terms of Service</Link>
               <Link to="/cookies-policy" className="hover:text-white">Cookies Policy</Link>
+              <Link to="/admin/login" className="text-gray-600 hover:text-slate-400 text-xs mt-0.5 ml-2">• Staff Portal</Link>
             </div>
           </div>
         </div>

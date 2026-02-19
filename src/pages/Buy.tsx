@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
+import {
   Search,
   Filter,
   Car,
@@ -57,7 +57,7 @@ const Buy = () => {
           id: car.id,
           name: `${car.make} ${car.model}`,
           price: car.price,
-          image: car.images[0],
+          image: (car.images && car.images.length > 0) ? car.images[0] : '/placeholder-car.png',
           year: car.year,
           mileage: `${car.mileage} km`,
           fuel: car.fuel_type,
@@ -81,12 +81,12 @@ const Buy = () => {
   const filteredCars = cars.filter(car => {
     const matchesSearch = car.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesBrand = !selectedBrand || car.brand === selectedBrand;
-    const matchesPrice = !selectedPrice || 
+    const matchesPrice = !selectedPrice ||
       (selectedPrice === 'under-100k' && car.price < 100000) ||
       (selectedPrice === '100k-150k' && car.price >= 100000 && car.price <= 150000) ||
       (selectedPrice === 'over-150k' && car.price > 150000);
     const matchesType = !selectedType || car.type === selectedType;
-    
+
     return matchesSearch && matchesBrand && matchesPrice && matchesType;
   });
 
@@ -121,7 +121,7 @@ const Buy = () => {
                   className="pl-10"
                 />
               </div>
-              
+
               <Select value={selectedBrand || "all"} onValueChange={(value) => setSelectedBrand(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Brands" />
@@ -170,8 +170,8 @@ const Buy = () => {
           {filteredCars.map((car) => (
             <Card key={car.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="aspect-video bg-gray-200">
-                <img 
-                  src={car.image} 
+                <img
+                  src={car.image}
                   alt={car.name}
                   className="object-cover w-full h-full"
                 />
@@ -181,7 +181,7 @@ const Buy = () => {
                   <h3 className="text-lg font-semibold">{car.name}</h3>
                   <Badge variant="secondary">{car.type}</Badge>
                 </div>
-                
+
                 <div className="mb-3 text-2xl font-bold text-primary">
                   GHS {car.price.toLocaleString()}
                 </div>

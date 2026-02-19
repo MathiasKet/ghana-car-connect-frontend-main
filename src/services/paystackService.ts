@@ -73,7 +73,7 @@ export class PaystackService {
             try {
               // Verify payment on backend
               const verification = await this.verifyPayment(response.reference);
-              
+
               if (verification.status === 'success') {
                 resolve({
                   ...response,
@@ -97,7 +97,7 @@ export class PaystackService {
                 reject(error);
               }
             }
-            
+
             if (paymentData.callback) {
               paymentData.callback(response);
             }
@@ -108,7 +108,7 @@ export class PaystackService {
               reference: paymentData.reference || '',
               message: 'Payment cancelled by user'
             });
-            
+
             if (paymentData.onClose) {
               paymentData.onClose();
             }
@@ -145,7 +145,7 @@ export class PaystackService {
   async verifyPayment(reference: string): Promise<any> {
     try {
       const response = await api.get(`/payments/verify/${reference}`);
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Payment verification failed:', error);
       // For development, return success if backend is not available
@@ -167,7 +167,7 @@ export class PaystackService {
   // Process listing payment
   async processListingPayment(listingId: string, paymentData: PaymentData): Promise<PaymentResponse> {
     const reference = this.generateReference();
-    
+
     return this.initializePayment({
       ...paymentData,
       reference,
@@ -182,7 +182,7 @@ export class PaystackService {
   // Process subscription payment
   async processSubscriptionPayment(planId: string, paymentData: PaymentData): Promise<PaymentResponse> {
     const reference = this.generateReference();
-    
+
     return this.initializePayment({
       ...paymentData,
       reference,
@@ -197,7 +197,7 @@ export class PaystackService {
   // Process services payment
   async processServicesPayment(services: string[], paymentData: PaymentData): Promise<PaymentResponse> {
     const reference = this.generateReference();
-    
+
     return this.initializePayment({
       ...paymentData,
       reference,
@@ -244,9 +244,9 @@ export class PaystackService {
       // For development, simulate successful refund
       if (import.meta.env.DEV) {
         console.warn('Backend not available, simulating refund');
-        return { 
-          status: 'success', 
-          message: 'Refund simulated successfully (development mode)' 
+        return {
+          status: 'success',
+          message: 'Refund simulated successfully (development mode)'
         };
       }
       throw error;
