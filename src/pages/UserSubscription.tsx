@@ -6,9 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  Crown, 
-  Star, 
+import {
+  Crown,
+  Star,
   Gem,
   Car,
   CheckCircle2,
@@ -55,6 +55,7 @@ const UserSubscription = () => {
   const [user, setUser] = useState<any>(null);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [isUpgradeDialogOpen, setIsUpgradeDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -64,12 +65,9 @@ const UserSubscription = () => {
     if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      
-      // Load real subscription data from Supabase
+
       const loadSubscriptionData = async () => {
         try {
-          // In a real app, you'd fetch this from your subscriptions table
-          // For now, we'll set empty data since the subscription system needs to be implemented
           setSubscription(null);
           setUsageStats({
             totalListings: 0,
@@ -81,9 +79,11 @@ const UserSubscription = () => {
           });
         } catch (error) {
           console.error('Failed to load subscription data:', error);
+        } finally {
+          setIsLoading(false);
         }
       };
-      
+
       loadSubscriptionData();
     } else {
       navigate('/login');
@@ -137,8 +137,67 @@ const UserSubscription = () => {
     navigate('/subscription-plans');
   };
 
-  if (!user || !subscription) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-3" />
+          <p className="text-gray-600">Loading your subscription...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  // No active subscription — show a clean empty state
+  if (!subscription) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <div className="flex items-center space-x-2">
+                <Crown className="w-6 h-6 text-primary" />
+                <span className="text-lg font-semibold">My Subscription</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-lg mx-auto text-center">
+            <div className="bg-white rounded-2xl shadow-sm border p-10">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Crown className="h-10 w-10 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">No Active Plan</h2>
+              <p className="text-gray-500 mb-8 leading-relaxed">
+                You don't have an active subscription yet. Upgrade to a plan to unlock exclusive benefits like discounted listing fees, free listings, priority support, and more.
+              </p>
+              <div className="space-y-3">
+                <Button className="w-full" size="lg" onClick={() => navigate('/subscription-plans')}>
+                  <Crown className="h-5 w-5 mr-2" />
+                  Browse Subscription Plans
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
+                  Back to Dashboard
+                </Button>
+              </div>
+              <p className="text-xs text-gray-400 mt-6">
+                All plans include a 7-day free trial. Cancel anytime.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const planInfo = getPlanInfo(subscription.plan);
@@ -272,7 +331,7 @@ const UserSubscription = () => {
                 <div>
                   <h4 className="font-medium mb-2">Actions</h4>
                   <div className="space-y-2">
-                    <Button 
+                    <Button
                       onClick={() => setIsUpgradeDialogOpen(true)}
                       className="w-full"
                       variant="outline"
@@ -290,7 +349,7 @@ const UserSubscription = () => {
                         <DialogHeader>
                           <DialogTitle>Cancel Subscription?</DialogTitle>
                           <DialogDescription>
-                            Are you sure you want to cancel your {planInfo.name} subscription? 
+                            Are you sure you want to cancel your {planInfo.name} subscription?
                             You'll lose access to all premium benefits at the end of your billing period.
                           </DialogDescription>
                         </DialogHeader>
@@ -449,8 +508,8 @@ const UserSubscription = () => {
                     <div>
                       <h4 className="font-medium mb-2">Free Listings Usage</h4>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full" 
+                        <div
+                          className="bg-primary h-2 rounded-full"
                           style={{ width: `${((usageStats?.usedFreeListings || 0) / (subscription.benefits?.freeListings || 1)) * 100}%` }}
                         />
                       </div>
