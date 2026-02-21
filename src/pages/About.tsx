@@ -2,18 +2,19 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Car, 
-  Users, 
-  MapPin, 
-  Award, 
-  Target, 
+import {
+  Car,
+  Users,
+  MapPin,
+  Award,
+  Target,
   Heart,
   Shield,
   Clock,
   TrendingUp,
   CheckCircle2
 } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 const About = () => {
   const navigate = useNavigate();
@@ -85,27 +86,52 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title="About Us"
+        description="Learn more about CarConnect Ghana, the most trusted automotive marketplace in Ghana. Discover our mission, values, and story."
+        keywords="about carconnect, ghana car marketplace, automotive marketplace ghana"
+      />
+
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-white">
-        <div className="container px-4 py-16 mx-auto">
-          <div className="max-w-4xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              About CarConnect Ghana
-            </h1>
-            <p className="text-xl md:text-2xl text-white/90 mb-6">
-              Ghana's most trusted platform for buying, selling, and renting cars
-            </p>
-            <p className="text-lg text-white/80 mb-8">
-              We're revolutionizing the automotive marketplace in Ghana by connecting buyers, 
-              sellers, and renters through a secure, transparent, and user-friendly platform.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" variant="secondary" onClick={() => navigate('/buy')}>
-                Browse Cars
-              </Button>
-              <Button size="lg" variant="default" onClick={() => navigate('/sell')}>
-                Sell Your Car
-              </Button>
+      <div className="bg-gradient-to-r from-primary to-primary/80 text-white relative overflow-hidden">
+        {/* Decorative Background Elements */}
+        <div className="absolute top-0 right-0 w-1/4 h-full bg-white/5 -skew-x-12 transform translate-x-1/2" />
+
+        <div className="container px-4 py-20 mx-auto relative z-10">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+            <div className="max-w-3xl">
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">
+                About CarConnect Ghana
+              </h1>
+              <p className="text-xl md:text-2xl text-white/90 mb-6 font-medium">
+                Ghana's most trusted platform for buying, selling, and renting cars
+              </p>
+              <p className="text-lg text-white/80 mb-8 leading-relaxed max-w-2xl">
+                We're revolutionizing the automotive marketplace in Ghana by connecting buyers,
+                sellers, and renters through a secure, transparent, and user-friendly platform.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Button size="lg" variant="secondary" className="font-semibold" onClick={() => navigate('/buy')}>
+                  Browse Cars
+                </Button>
+                <Button size="lg" variant="default" className="bg-white/10 hover:bg-white/20 border-white/20" onClick={() => navigate('/sell')}>
+                  Sell Your Car
+                </Button>
+              </div>
+            </div>
+
+            <div className="hidden lg:block relative group w-full max-w-xl">
+              <div className="absolute inset-0 bg-white/10 blur-[100px] rounded-full" />
+              <div className="relative">
+                <img
+                  src="/about-hero-car.png"
+                  alt="Premium Luxury SUV"
+                  className="w-full h-auto object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.3)] transform hover:scale-105 transition-transform duration-700"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -137,7 +163,7 @@ const About = () => {
               <Target className="h-16 w-16 text-primary mx-auto mb-4" />
               <h2 className="text-3xl font-bold mb-4">Our Mission</h2>
               <p className="text-lg text-gray-600">
-                To make car ownership accessible, affordable, and hassle-free for every Ghanaian 
+                To make car ownership accessible, affordable, and hassle-free for every Ghanaian
                 by providing a trusted marketplace that connects people with their perfect vehicles.
               </p>
             </div>
@@ -194,20 +220,20 @@ const About = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-gray-700">
-                  CarConnect Ghana was founded in 2019 with a simple mission: to transform the way 
-                  Ghanaians buy, sell, and rent cars. Our founders experienced firsthand the challenges 
+                  CarConnect Ghana was founded in 2019 with a simple mission: to transform the way
+                  Ghanaians buy, sell, and rent cars. Our founders experienced firsthand the challenges
                   of finding reliable vehicles and trustworthy sellers in the Ghanaian market.
                 </p>
                 <p className="text-gray-700">
-                  What started as a small platform with just a few listings has grown into Ghana's 
-                  leading automotive marketplace, serving thousands of customers across the country. 
-                  We've helped everyone from first-time car buyers to experienced dealers find their 
+                  What started as a small platform with just a few listings has grown into Ghana's
+                  leading automotive marketplace, serving thousands of customers across the country.
+                  We've helped everyone from first-time car buyers to experienced dealers find their
                   perfect match.
                 </p>
                 <p className="text-gray-700">
-                  Today, we continue to innovate and improve our platform, always keeping our customers' 
-                  needs at the heart of everything we do. Whether you're buying your first car, selling 
-                  a beloved vehicle, or looking for a reliable rental, CarConnect Ghana is here to make 
+                  Today, we continue to innovate and improve our platform, always keeping our customers'
+                  needs at the heart of everything we do. Whether you're buying your first car, selling
+                  a beloved vehicle, or looking for a reliable rental, CarConnect Ghana is here to make
                   your journey smooth and successful.
                 </p>
               </CardContent>
