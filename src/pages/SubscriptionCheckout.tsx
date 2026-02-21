@@ -8,9 +8,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { 
-  CreditCard, 
-  Check, 
+import {
+  CreditCard,
+  Check,
   ArrowLeft,
   Shield,
   Star,
@@ -22,6 +22,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import PaystackService from '@/services/paystackService';
+import SupabaseService from '@/services/supabaseService';
 
 interface SubscriptionPlan {
   id: string;
@@ -83,6 +84,66 @@ const SubscriptionCheckout = () => {
     }
   ];
 
+  const saveSubscriptionToDatabase = async (reference: string) => {
+    if (!selectedPlan || !user) return;
+
+    const today = new Date();
+    const endDate = new Date(today);
+    if (billingCycle === 'monthly') {
+      endDate.setMonth(endDate.getMonth() + 1);
+    } else {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    }
+
+    try {
+      // Cancel any existing active subscription first
+      const { supabase } = SupabaseService;
+      await supabase
+        .from('subscriptions')
+        .update({ status: 'cancelled' })
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+
+      // Create new subscription
+      await SupabaseService.createSubscription({
+        user_id: user.id,
+        plan: selectedPlan.id as 'basic' | 'pro' | 'enterprise' | 'platinum',
+        status: 'active',
+        start_date: today.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+        auto_renew: true,
+        benefits: {
+          listingDiscount: selectedPlan.benefits.listingDiscount,
+          freeListings: selectedPlan.benefits.freeListings,
+          featuredDiscount: selectedPlan.benefits.featuredDiscount,
+          prioritySupport: selectedPlan.benefits.prioritySupport,
+          analytics: selectedPlan.benefits.analytics,
+          bulkListing: selectedPlan.benefits.bulkListing,
+          verifiedBadge: selectedPlan.benefits.verifiedBadge,
+        }
+      });
+
+      // Record the payment
+      await SupabaseService.createPayment({
+        user_id: user.id,
+        reference,
+        amount: selectedPlan.price,
+        currency: 'GHS',
+        status: 'completed',
+        payment_method: 'card',
+        provider: 'paystack',
+        type: 'subscription',
+        metadata: { planId: selectedPlan.id, billingCycle },
+        gateway_response: { provider: 'paystack', reference },
+      });
+
+      console.log('Subscription saved to database successfully');
+    } catch (dbError) {
+      console.error('Failed to save subscription to database:', dbError);
+      // Don't block the user — Paystack already charged them
+    }
+  };
+
   const handleSubscribe = async () => {
     if (!selectedPlan || !user) {
       setError('Missing plan or user information');
@@ -106,10 +167,12 @@ const SubscriptionCheckout = () => {
             billingCycle,
             userId: user.id
           },
-          callback: (response) => {
+          callback: async (response) => {
+            // Save subscription to DB after payment succeeds
+            await saveSubscriptionToDatabase(response.reference || '');
             setCurrentStep(3);
             setTimeout(() => {
-              navigate('/dashboard');
+              navigate('/subscription');
             }, 3000);
           },
           onClose: () => {
@@ -128,6 +191,7 @@ const SubscriptionCheckout = () => {
       setIsProcessing(false);
     }
   };
+
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-GH', {
@@ -182,25 +246,20 @@ const SubscriptionCheckout = () => {
           {/* Progress Steps */}
           <div className="flex items-center justify-center mb-8">
             <div className="flex items-center space-x-4">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                currentStep >= 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${currentStep >= 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
                 {currentStep > 1 ? <Check className="h-4 w-4" /> : '1'}
               </div>
-              <div className={`w-16 h-1 ${
-                currentStep >= 2 ? 'bg-primary' : 'bg-gray-200'
-              }`} />
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                currentStep >= 2 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
+              <div className={`w-16 h-1 ${currentStep >= 2 ? 'bg-primary' : 'bg-gray-200'
+                }`} />
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${currentStep >= 2 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
                 {currentStep > 2 ? <Check className="h-4 w-4" /> : '2'}
               </div>
-              <div className={`w-16 h-1 ${
-                currentStep >= 3 ? 'bg-primary' : 'bg-gray-200'
-              }`} />
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                currentStep >= 3 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
+              <div className={`w-16 h-1 ${currentStep >= 3 ? 'bg-primary' : 'bg-gray-200'
+                }`} />
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${currentStep >= 3 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
                 {currentStep > 3 ? <Check className="h-4 w-4" /> : '3'}
               </div>
             </div>
@@ -273,8 +332,8 @@ const SubscriptionCheckout = () => {
                       </div>
                     </div>
 
-                    <Button 
-                      onClick={() => setCurrentStep(2)} 
+                    <Button
+                      onClick={() => setCurrentStep(2)}
                       className="w-full"
                       size="lg"
                     >
@@ -329,15 +388,15 @@ const SubscriptionCheckout = () => {
                     </RadioGroup>
 
                     <div className="flex space-x-4">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => setCurrentStep(1)}
                         className="flex-1"
                       >
                         Back
                       </Button>
-                      <Button 
-                        onClick={handleSubscribe} 
+                      <Button
+                        onClick={handleSubscribe}
                         disabled={!selectedPaymentMethod || isProcessing}
                         className="flex-1"
                       >
@@ -364,7 +423,7 @@ const SubscriptionCheckout = () => {
                       <p className="text-sm text-gray-600">Billing: {billingCycle}</p>
                     </div>
                     <p className="text-sm text-gray-500">
-                      Redirecting you to your dashboard...
+                      Redirecting you to your subscription page...
                     </p>
                   </CardContent>
                 </Card>

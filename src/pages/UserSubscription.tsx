@@ -24,6 +24,8 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react';
+import SupabaseService from '@/services/supabaseService';
+import { supabase } from '@/lib/supabase';
 
 interface UserSubscription {
   plan: string;
@@ -68,14 +70,48 @@ const UserSubscription = () => {
 
       const loadSubscriptionData = async () => {
         try {
-          setSubscription(null);
+          // Fetch real subscription from Supabase
+          const dbSub = await SupabaseService.getUserSubscription(parsedUser.id);
+
+          if (dbSub) {
+            const benefits = dbSub.benefits as any;
+            setSubscription({
+              plan: dbSub.plan,
+              status: dbSub.status as UserSubscription['status'],
+              startDate: dbSub.start_date,
+              endDate: dbSub.end_date,
+              billingCycle: 'monthly',
+              benefits: {
+                listingDiscount: benefits?.listingDiscount ?? 0,
+                freeListings: benefits?.freeListings ?? benefits?.listingLimit ?? 0,
+                featuredDiscount: benefits?.featuredDiscount ?? 0,
+                prioritySupport: benefits?.prioritySupport ?? false,
+                analytics: benefits?.analytics ?? false,
+                bulkListing: benefits?.bulkListing ?? false,
+                verifiedBadge: benefits?.verifiedBadge ?? false,
+              }
+            });
+          } else {
+            setSubscription(null);
+          }
+
+          // Fetch real listing stats
+          const { data: listings } = await supabase
+            .from('car_listings')
+            .select('views, inquiries, status')
+            .eq('user_id', parsedUser.id);
+
+          const totalListings = listings?.length ?? 0;
+          const totalViews = listings?.reduce((s, l) => s + (l.views || 0), 0) ?? 0;
+          const totalInquiries = listings?.reduce((s, l) => s + (l.inquiries || 0), 0) ?? 0;
+
           setUsageStats({
-            totalListings: 0,
-            usedFreeListings: 0,
-            totalViews: 0,
-            totalInquiries: 0,
+            totalListings,
+            usedFreeListings: totalListings,
+            totalViews,
+            totalInquiries,
             savingsAmount: 0,
-            featuredListingsUsed: 0
+            featuredListingsUsed: listings?.filter(l => l.status === 'active').length ?? 0,
           });
         } catch (error) {
           console.error('Failed to load subscription data:', error);
