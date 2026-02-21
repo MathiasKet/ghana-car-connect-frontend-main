@@ -92,37 +92,59 @@ export class SupabaseService {
         if (!profile) {
           console.warn('SupabaseService: Profile missing for user:', user.email, 'Attempting auto-creation...');
 
-          // Auto-create profile if missing
+          // Determine role — official admin email always gets admin role
           const isOfficialAdmin = user.email === 'mrkett25@gmail.com';
-          const newProfile = {
+          const resolvedRole = isOfficialAdmin
+            ? 'admin'
+            : (user.user_metadata?.role || 'user');
+
+          // Build the fallback profile to use if DB insert fails
+          const fallbackProfile = {
             id: user.id,
             email: user.email!,
-            name: user.user_metadata?.name || user.email?.split('@')[0] || 'Admin',
+            name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
             phone: user.user_metadata?.phone || null,
-            role: isOfficialAdmin ? 'admin' : (user.user_metadata?.role || 'user'),
-            is_verified: isOfficialAdmin, // Auto-verify the official admin
+            role: resolvedRole,
+            is_verified: isOfficialAdmin,
             is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           };
 
-          console.log(`SupabaseService: Creating new profile. Email: ${user.email}, Role: ${newProfile.role}`);
+          console.log(`SupabaseService: Creating new profile. Email: ${user.email}, Role: ${resolvedRole}`);
 
-          const { data: createdProfile, error: insertError } = await supabase
-            .from('users')
-            .upsert(newProfile, {
-              onConflict: 'id',
-              ignoreDuplicates: false
-            })
-            .select()
-            .maybeSingle();
+          try {
+            // Try a plain INSERT first (works with RLS INSERT policy)
+            const { data: createdProfile, error: insertError } = await supabase
+              .from('users')
+              .insert(fallbackProfile)
+              .select()
+              .maybeSingle();
 
-          if (insertError) {
-            console.error('SupabaseService: Failed to create user profile in DB:', insertError);
-            // Return a fallback profile object so the app can still function with metadata-based role
-            return { user, profile: newProfile };
+            if (insertError) {
+              // If insert fails (e.g., row already exists due to race condition), try a select again
+              if (insertError.code === '23505' || insertError.message?.includes('duplicate')) {
+                const { data: existingProfile } = await supabase
+                  .from('users')
+                  .select('*')
+                  .eq('id', user.id)
+                  .maybeSingle();
+                if (existingProfile) {
+                  console.log('SupabaseService: Profile found on retry. Role:', existingProfile.role);
+                  return { user, profile: existingProfile };
+                }
+              }
+              // RLS or other error — use fallback profile so login still works
+              console.warn('SupabaseService: DB insert blocked (likely RLS). Using metadata-based profile. Role:', resolvedRole);
+              return { user, profile: fallbackProfile };
+            }
+
+            console.log('SupabaseService: Profile created successfully in DB. Role:', createdProfile?.role);
+            return { user, profile: createdProfile || fallbackProfile };
+          } catch (createErr) {
+            console.warn('SupabaseService: Profile creation exception. Using fallback. Role:', resolvedRole);
+            return { user, profile: fallbackProfile };
           }
-
-          console.log('SupabaseService: Profile created successfully in DB. Role:', createdProfile?.role);
-          return { user, profile: createdProfile };
         }
 
         console.log('SupabaseService: Profile found in DB. Role:', profile.role);
