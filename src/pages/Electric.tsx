@@ -142,8 +142,8 @@ const Electric = () => {
                                     Go green with our selection of premium electric vehicles. Experience the future of driving today.
                                 </p>
                             </div>
-                            <div className="hidden lg:block relative group">
-                                <div className="absolute inset-0 bg-primary/10 blur-[100px] rounded-full" />
+                            <div className="relative group mt-8 lg:mt-0">
+                                <div className="absolute inset-0 bg-primary/10 blur-[80px] rounded-full" />
                                 <div className="relative max-w-xl">
                                     <img
                                         src="/electric-hero-car.png"

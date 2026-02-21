@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Car, 
-  Plus, 
-  CreditCard, 
-  Settings, 
-  Eye, 
-  Edit, 
-  Trash2, 
+import {
+  Car,
+  Plus,
+  CreditCard,
+  Settings,
+  Eye,
+  Edit,
+  Trash2,
   Star,
   TrendingUp,
   Users,
@@ -28,6 +28,7 @@ import { PaymentVerificationPanel } from '@/components/PaymentVerification';
 import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import api from '@/services/api';
+import Inbox from '@/components/Inbox';
 
 interface CarListing {
   id: string;
@@ -56,10 +57,10 @@ const UserDashboard = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const navigate = useNavigate();
-  
+
   // Supabase authentication
   const { user: supabaseUser, loading: authLoading } = useSupabaseAuth();
-  
+
   // Supabase real-time synchronization
   const { lastUpdate, isConnected } = useSupabaseRealtime(supabaseUser?.id);
 
@@ -81,10 +82,10 @@ const UserDashboard = () => {
       // Load user's car listings
       const listings = await api.getUserCars(supabaseUser.id);
       setCarListings(listings);
-      
+
       // Load user's subscription
       let subscription = await api.getUserSubscription(supabaseUser.id);
-      
+
       // If no subscription found, create default Basic subscription data
       if (!subscription) {
         subscription = {
@@ -104,11 +105,11 @@ const UserDashboard = () => {
         };
       }
       setSubscription(subscription);
-      
+
       // Load user's payments
       const payments = await api.getUserPaymentHistory(supabaseUser.id);
       setPayments(payments);
-      
+
       updateStats();
     } catch (error) {
       console.error('Failed to load user data:', error);
@@ -118,7 +119,7 @@ const UserDashboard = () => {
   // Refresh functions
   const refreshListings = async () => {
     if (!supabaseUser) return;
-    
+
     try {
       const listings = await api.getUserCars(supabaseUser.id);
       setCarListings(listings);
@@ -129,7 +130,7 @@ const UserDashboard = () => {
 
   const refreshPayments = async () => {
     if (!supabaseUser) return;
-    
+
     try {
       const payments = await api.getUserPaymentHistory(supabaseUser.id);
       setPayments(payments);
@@ -140,7 +141,7 @@ const UserDashboard = () => {
 
   const refreshSubscription = async () => {
     if (!supabaseUser) return;
-    
+
     try {
       const subscription = await api.getUserSubscription(supabaseUser.id);
       setSubscription(subscription);
@@ -157,7 +158,7 @@ const UserDashboard = () => {
     const activeListings = carListings.filter(l => l.status === 'active').length;
     const totalViews = carListings.reduce((sum, l) => sum + l.views, 0);
     const totalInquiries = carListings.reduce((sum, l) => sum + l.inquiries, 0);
-    
+
     setStats({
       totalListings: carListings.length,
       activeListings,
@@ -169,7 +170,7 @@ const UserDashboard = () => {
   // Auto-refresh on relevant events
   useEffect(() => {
     if (lastUpdate) {
-      
+
       // Refresh data based on event type
       switch (lastUpdate.eventType) {
         case 'listing_active':
@@ -186,7 +187,7 @@ const UserDashboard = () => {
           // Refresh all data for other events
           loadUserData();
       }
-      
+
       // Show notification for user-specific events
       const message = getEventMessage(lastUpdate);
       if (message) {
@@ -285,7 +286,7 @@ const UserDashboard = () => {
                   </>
                 )}
               </div>
-              
+
               {/* Notifications */}
               {notifications.length > 0 && (
                 <div className="relative">
@@ -295,7 +296,7 @@ const UserDashboard = () => {
                   </Badge>
                 </div>
               )}
-              
+
               <Link to="/payment">
                 <Button variant="outline" size="sm">
                   <CreditCard className="h-4 w-4 mr-2" />
@@ -407,7 +408,7 @@ const UserDashboard = () => {
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {subscription.endDate 
+                      {subscription.endDate
                         ? `Renews on ${new Date(subscription.endDate).toLocaleDateString()}`
                         : 'Valid forever'
                       }
@@ -508,7 +509,14 @@ const UserDashboard = () => {
                       {car.featured && <Star className="h-4 w-4 text-yellow-500" />}
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                    <img
+                      src={car.images && car.images.length > 0 ? car.images[0] : '/placeholder.svg'}
+                      alt={`${car.make} ${car.model}`}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                  <CardContent className="pt-4">
                     <div className="space-y-3">
                       <div>
                         <h4 className="font-semibold text-gray-900">
@@ -516,11 +524,11 @@ const UserDashboard = () => {
                         </h4>
                         <p className="text-sm text-gray-600">{car.year}</p>
                       </div>
-                      
+
                       <div className="text-lg font-bold text-primary">
                         {formatPrice(car.price)}
                       </div>
-                      
+
                       <div className="flex items-center justify-between text-sm text-gray-500">
                         <span className="flex items-center">
                           <Eye className="h-4 w-4 mr-1" />
@@ -531,7 +539,7 @@ const UserDashboard = () => {
                           {car.inquiries}
                         </span>
                       </div>
-                      
+
                       <div className="flex space-x-2">
                         <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate(`/list-car?edit=${car.id}`)}>
                           <Edit className="h-4 w-4 mr-1" />
@@ -571,20 +579,7 @@ const UserDashboard = () => {
           </TabsContent>
 
           <TabsContent value="messages" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Messages & Inquiries</CardTitle>
-                <CardDescription>
-                  Manage inquiries from potential buyers
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No new messages</p>
-                </div>
-              </CardContent>
-            </Card>
+            <Inbox userId={supabaseUser.id} />
           </TabsContent>
         </Tabs>
       </div>

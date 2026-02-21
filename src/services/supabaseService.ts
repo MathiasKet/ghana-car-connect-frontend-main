@@ -561,6 +561,47 @@ export class SupabaseService {
     }
   }
 
+  async getUserInquiries(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('inquiries')
+        .select(`
+          *,
+          car_listings!inner (
+            id,
+            make,
+            model,
+            user_id
+          )
+        `)
+        .eq('car_listings.user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Get user inquiries error:', error);
+      throw error;
+    }
+  }
+
+  async updateInquiryStatus(inquiryId: string, status: string) {
+    try {
+      const { data, error } = await supabase
+        .from('inquiries')
+        .update({ status })
+        .eq('id', inquiryId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Update inquiry status error:', error);
+      throw error;
+    }
+  }
+
   // Real-time subscriptions
   subscribeToTableChanges(table: string, callback: (payload: any) => void) {
     return supabase

@@ -82,6 +82,24 @@
     @apply font-semibold tracking-tight;
   }
 
+  ::selection {
+    @apply bg-primary/20 text-primary;
+  }
+
+  /* Custom Scrollbar for premium feel */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/20 rounded-full border-2 border-transparent bg-clip-padding hover:bg-primary/40 transition-colors;
+  }
+
   h1 {
     @apply text-3xl sm:text-4xl lg:text-5xl;
   }

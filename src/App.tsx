@@ -44,6 +44,7 @@ const CarFinancing = lazy(() => import("./pages/CarFinancing"));
 const CarTransport = lazy(() => import("./pages/CarTransport"));
 const VehicleHistoryReports = lazy(() => import("./pages/VehicleHistoryReports"));
 const CarBooking = lazy(() => import("./pages/CarBooking"));
+const BookInspection = lazy(() => import("./pages/BookInspection"));
 const BookingConfirmation = lazy(() => import("./pages/BookingConfirmation"));
 
 // Admin pages
@@ -174,6 +175,7 @@ const App = () => (
 
               {/* Booking Pages */}
               <Route path="/car-booking" element={<CarBooking />} />
+              <Route path="/book-inspection" element={<BookInspection />} />
               <Route path="/booking-confirmation" element={<BookingConfirmation />} />
 
               {/* Admin Routes */}
