@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 
 interface Car {
     id: string;
@@ -118,6 +119,11 @@ const Electric = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
+            <SEO
+                title="Electric Cars for Sale"
+                description="Browse our exclusive collection of electric vehicles in Ghana. Find Tesla, BYD, and more eco-friendly cars."
+                keywords="electric cars ghana, EV ghana, tesla ghana, byd ghana, sustainable driving"
+            />
             <Header />
 
             <main className="flex-grow">
@@ -136,9 +142,22 @@ const Electric = () => {
                                     Go green with our selection of premium electric vehicles. Experience the future of driving today.
                                 </p>
                             </div>
-                            <div className="hidden lg:block">
-                                <div className="w-64 h-64 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
-                                    <Zap className="h-32 w-32 text-primary" />
+                            <div className="hidden lg:block relative group">
+                                <div className="absolute inset-0 bg-primary/10 blur-[100px] rounded-full" />
+                                <div className="relative max-w-xl">
+                                    <img
+                                        src="/electric-hero-car.png"
+                                        alt="Modern Electric Vehicle"
+                                        className="w-full h-auto object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.25)] transform hover:scale-105 transition-transform duration-700"
+                                        onError={(e) => {
+                                            // Fallback if image not found
+                                            e.currentTarget.style.display = 'none';
+                                            const parent = e.currentTarget.parentElement?.parentElement;
+                                            if (parent) {
+                                                parent.innerHTML = '<div class="w-64 h-64 bg-primary/10 rounded-full flex items-center justify-center animate-pulse"><svg class="h-32 w-32 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>';
+                                            }
+                                        }}
+                                    />
                                 </div>
                             </div>
                         </div>
