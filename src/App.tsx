@@ -16,6 +16,7 @@ const Buy = lazy(() => import("./pages/Buy"));
 const Rent = lazy(() => import("./pages/Rent"));
 const Sell = lazy(() => import("./pages/Sell"));
 const About = lazy(() => import("./pages/About"));
+const Electric = lazy(() => import("./pages/Electric"));
 const ListingPayment = lazy(() => import("./pages/ListingPayment"));
 const ListingSuccess = lazy(() => import("./pages/ListingSuccess"));
 const ValueAddedServices = lazy(() => import("./pages/ValueAddedServices"));
@@ -133,6 +134,7 @@ const App = () => (
               <Route path="/rent" element={<Rent />} />
               <Route path="/sell" element={<Sell />} />
               <Route path="/about" element={<About />} />
+              <Route path="/electric" element={<Electric />} />
               <Route path="/listing-payment" element={<ListingPayment />} />
               <Route path="/listing-success" element={<ListingSuccess />} />
               <Route path="/value-added-services" element={<ValueAddedServices />} />
