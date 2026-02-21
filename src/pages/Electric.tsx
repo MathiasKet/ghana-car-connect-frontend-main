@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import supabaseService from '@/services/supabaseService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,10 @@ import {
     DollarSign,
     Fuel,
     Users,
-    Zap
+    Zap,
+    ChevronLeft,
+    ChevronRight,
+    Loader2
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -42,57 +45,76 @@ const Electric = () => {
     const [selectedPrice, setSelectedPrice] = useState('');
     const [selectedType, setSelectedType] = useState('');
 
-    useEffect(() => {
-        const fetchCars = async () => {
-            try {
-                const { data, error } = await supabase
-                    .from('car_listings')
-                    .select('*')
-                    .eq('status', 'active')
-                    .eq('fuel_type', 'electric')
-                    .order('created_at', { ascending: false });
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCars, setTotalCars] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const pageSize = 9;
 
-                if (error) {
-                    console.error('Error fetching cars:', error);
-                    return;
-                }
+    const fetchCars = useCallback(async () => {
+        try {
+            setLoading(true);
 
-                const formattedCars = data.map((car: any) => ({
-                    id: car.id,
-                    name: `${car.make} ${car.model}`,
-                    price: car.price,
-                    image: (car.images && car.images.length > 0) ? car.images[0] : '/placeholder-car.png',
-                    year: car.year,
-                    mileage: `${car.mileage} km`,
-                    fuel: car.fuel_type,
-                    transmission: car.transmission,
-                    location: car.location,
-                    type: car.type,
-                    brand: car.make
-                }));
+            const filters: any = {
+                page: currentPage,
+                pageSize: pageSize,
+                search: searchTerm,
+                make: selectedBrand,
+                type: selectedType,
+                fuel_type: 'electric' // Always filter by electric
+            };
 
-                setCars(formattedCars || []);
-            } catch (error) {
-                console.error('Error:', error);
-            } finally {
-                setLoading(false);
+            // Handle price range filter
+            if (selectedPrice === 'under-100k') {
+                filters.max_price = 100000;
+            } else if (selectedPrice === '100k-150k') {
+                filters.min_price = 100000;
+                filters.max_price = 150000;
+            } else if (selectedPrice === 'over-150k') {
+                filters.min_price = 150000;
             }
-        };
 
+            const result = await supabaseService.getCarListings(filters);
+
+            const formattedCars = result.data.map((car: any) => ({
+                id: car.id,
+                name: `${car.make} ${car.model}`,
+                price: car.price,
+                image: (car.images && car.images.length > 0) ? car.images[0] : '/placeholder-car.png',
+                year: car.year,
+                mileage: `${car.mileage} km`,
+                fuel: car.fuel_type,
+                transmission: car.transmission,
+                location: car.location,
+                type: car.type,
+                brand: car.make
+            }));
+
+            setCars(formattedCars);
+            setTotalCars(result.count);
+            setTotalPages(result.totalPages);
+        } catch (error) {
+            console.error('Error fetching cars:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [currentPage, searchTerm, selectedBrand, selectedPrice, selectedType]);
+
+    useEffect(() => {
+        // Reset to first page when filters change
+        setCurrentPage(1);
+    }, [searchTerm, selectedBrand, selectedPrice, selectedType]);
+
+    useEffect(() => {
         fetchCars();
-    }, []);
+    }, [fetchCars]);
 
-    const filteredCars = cars.filter(car => {
-        const matchesSearch = car.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesBrand = !selectedBrand || car.brand === selectedBrand;
-        const matchesPrice = !selectedPrice ||
-            (selectedPrice === 'under-100k' && car.price < 100000) ||
-            (selectedPrice === '100k-150k' && car.price >= 100000 && car.price <= 150000) ||
-            (selectedPrice === 'over-150k' && car.price > 150000);
-        const matchesType = !selectedType || car.type === selectedType;
-
-        return matchesSearch && matchesBrand && matchesPrice && matchesType;
-    });
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -178,73 +200,123 @@ const Electric = () => {
                         </CardContent>
                     </Card>
 
-                    {/* Results */}
+                    {/* Results Info */}
                     <div className="flex items-center justify-between mb-6">
-                        <p className="text-gray-600">Showing {filteredCars.length} electric cars</p>
+                        <p className="text-gray-600">
+                            {loading ? 'Searching...' : `Showing ${cars.length} of ${totalCars} electric cars`}
+                        </p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {filteredCars.map((car) => (
-                            <Card key={car.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-none group">
-                                <div className="aspect-video bg-gray-200 relative overflow-hidden">
-                                    <img
-                                        src={car.image}
-                                        alt={car.name}
-                                        className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
-                                    />
-                                    <div className="absolute top-2 right-2">
-                                        <Badge className="bg-green-500 hover:bg-green-600">ELECTRIC</Badge>
-                                    </div>
-                                </div>
-                                <CardContent className="p-5">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <h3 className="text-xl font-bold">{car.name}</h3>
-                                        <Badge variant="outline">{car.year}</Badge>
-                                    </div>
-
-                                    <div className="mb-4 text-2xl font-black text-primary">
-                                        GHS {car.price.toLocaleString()}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3 mb-6 text-sm text-gray-600">
-                                        <div className="flex items-center">
-                                            <Zap className="h-4 w-4 mr-2 text-green-500" />
-                                            Zero Emission
+                    {/* Results Grid */}
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center py-24">
+                            <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+                            <p className="text-gray-500 font-medium">Finding the best EVs for you...</p>
+                        </div>
+                    ) : cars.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                {cars.map((car) => (
+                                    <Card
+                                        key={car.id}
+                                        className="overflow-hidden hover:shadow-xl transition-all duration-300 border-none group cursor-pointer"
+                                        onClick={() => navigate(`/car/${car.id}`)}
+                                    >
+                                        <div className="aspect-video bg-gray-200 relative overflow-hidden">
+                                            <img
+                                                src={car.image}
+                                                alt={car.name}
+                                                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                                            />
+                                            <div className="absolute top-2 right-2">
+                                                <Badge className="bg-green-500 hover:bg-green-600">ELECTRIC</Badge>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center">
-                                            <Car className="h-4 w-4 mr-2 text-blue-500" />
-                                            {car.mileage}
-                                        </div>
-                                        <div className="flex items-center col-span-2">
-                                            <Users className="h-4 w-4 mr-2 text-purple-500" />
-                                            Automatic Transmission
-                                        </div>
-                                    </div>
+                                        <CardContent className="p-5">
+                                            <div className="flex items-start justify-between mb-2">
+                                                <h3 className="text-xl font-bold">{car.name}</h3>
+                                                <Badge variant="outline">{car.year}</Badge>
+                                            </div>
 
-                                    <Button className="w-full group-hover:bg-primary/90">
-                                        View Vehicle Details
+                                            <div className="mb-4 text-2xl font-black text-primary">
+                                                GHS {car.price.toLocaleString()}
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3 mb-6 text-sm text-gray-600">
+                                                <div className="flex items-center">
+                                                    <Zap className="h-4 w-4 mr-2 text-green-500" />
+                                                    Zero Emission
+                                                </div>
+                                                <div className="flex items-center">
+                                                    <Car className="h-4 w-4 mr-2 text-blue-500" />
+                                                    {car.mileage}
+                                                </div>
+                                                <div className="flex items-center col-span-2">
+                                                    <Users className="h-4 w-4 mr-2 text-purple-500" />
+                                                    Automatic Transmission
+                                                </div>
+                                            </div>
+
+                                            <Button className="w-full group-hover:bg-primary/90">
+                                                View Vehicle Details
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-center space-x-2 mt-12 pb-8">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="rounded-full"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
                                     </Button>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
 
-                    {filteredCars.length === 0 && !loading && (
+                                    <div className="flex items-center space-x-1">
+                                        {[...Array(totalPages)].map((_, i) => (
+                                            <Button
+                                                key={i + 1}
+                                                variant={currentPage === i + 1 ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => handlePageChange(i + 1)}
+                                                className={`w-10 h-10 rounded-full ${currentPage === i + 1 ? 'shadow-md shadow-primary/20' : ''}`}
+                                            >
+                                                {i + 1}
+                                            </Button>
+                                        ))}
+                                    </div>
+
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className="rounded-full"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            )}
+                        </>
+                    ) : (
                         <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-dashed">
                             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Zap className="h-10 w-10 text-gray-300" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">No Electric Cars Currently Listed</h3>
-                            <p className="text-gray-600 mb-8">Be the first to list an EV on CarConnect Ghana!</p>
-                            <Button onClick={() => navigate('/list-car')}>List Your Electric Car</Button>
-                        </div>
-                    )}
-
-                    {loading && (
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className="h-96 bg-white animate-pulse rounded-2xl shadow-sm" />
-                            ))}
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">No Electric Cars Matching Your Search</h3>
+                            <p className="text-gray-600 mb-8">Try adjusting your filters or search terms.</p>
+                            <Button onClick={() => {
+                                setSearchTerm('');
+                                setSelectedBrand('');
+                                setSelectedPrice('');
+                                setSelectedType('');
+                            }}>Clear All Filters</Button>
                         </div>
                     )}
                 </div>

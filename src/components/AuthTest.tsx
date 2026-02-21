@@ -10,7 +10,7 @@ export const AuthTest = () => {
   const [email, setEmail] = useState('mrkett25@gmail.com');
   const [password, setPassword] = useState('password');
   const [loading, setLoading] = useState(false);
-  
+
   const { login, user, isAuthenticated } = useAuthStore();
 
   const handleLogin = async () => {
@@ -20,7 +20,7 @@ export const AuthTest = () => {
     }
 
     setLoading(true);
-    
+
     try {
       await login(email, password);
       toast.success('Login successful!');
@@ -57,7 +57,7 @@ export const AuthTest = () => {
                 Verified: {user?.verified ? 'Yes' : 'No'}
               </p>
             </div>
-            
+
             <Button onClick={handleLogout} variant="outline" className="w-full">
               Logout
             </Button>
@@ -74,7 +74,7 @@ export const AuthTest = () => {
                 placeholder="mrkett25@gmail.com"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="password">Password</Label>
               <Input
@@ -86,8 +86,8 @@ export const AuthTest = () => {
               />
             </div>
 
-            <Button 
-              onClick={handleLogin} 
+            <Button
+              onClick={handleLogin}
               disabled={loading}
               className="w-full"
             >

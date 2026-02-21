@@ -1,4 +1,5 @@
 import { supabase, User, CarListing, Payment, Subscription, Inquiry } from '@/lib/supabase';
+import { ADMIN_EMAIL } from '@/lib/auth-config';
 
 export class SupabaseService {
   private static instance: SupabaseService;
@@ -93,7 +94,7 @@ export class SupabaseService {
           console.warn('SupabaseService: Profile missing for user:', user.email, 'Attempting auto-creation...');
 
           // Determine role — official admin email always gets admin role
-          const isOfficialAdmin = user.email === 'mrkett25@gmail.com';
+          const isOfficialAdmin = user.email === ADMIN_EMAIL;
           const resolvedRole = isOfficialAdmin
             ? 'admin'
             : (user.user_metadata?.role || 'user');
@@ -164,6 +165,11 @@ export class SupabaseService {
   // Car Listings
   async getCarListings(filters: any = {}) {
     try {
+      const page = filters.page || 1;
+      const pageSize = filters.pageSize || 12;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
       let query = supabase
         .from('car_listings')
         .select(`
@@ -173,34 +179,66 @@ export class SupabaseService {
             email,
             phone
           )
-        `);
+        `, { count: 'exact' });
 
       // Apply filters
       if (filters.status) {
         query = query.eq('status', filters.status);
+      } else {
+        query = query.eq('status', 'active'); // Default to active listings
       }
+
       if (filters.make) {
-        query = query.ilike('make', `%${filters.make}%`);
+        query = query.eq('make', filters.make);
       }
+
       if (filters.model) {
         query = query.ilike('model', `%${filters.model}%`);
       }
+
+      if (filters.type) {
+        query = query.eq('type', filters.type);
+      }
+
+      if (filters.fuel_type) {
+        query = query.eq('fuel_type', filters.fuel_type);
+      }
+
       if (filters.min_price) {
         query = query.gte('price', filters.min_price);
       }
+
       if (filters.max_price) {
         query = query.lte('price', filters.max_price);
       }
-      if (filters.featured) {
-        query = query.eq('featured', true);
+
+      if (filters.featured !== undefined) {
+        query = query.eq('featured', filters.featured === true);
       }
 
-      query = query.order('created_at', { ascending: false });
+      if (filters.search) {
+        // Multi-field search
+        query = query.or(`make.ilike.%${filters.search}%,model.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      }
 
-      const { data, error } = await query;
+      // Sort
+      const sortBy = filters.sortBy || 'created_at';
+      const ascending = filters.ascending || false;
+      query = query.order(sortBy, { ascending });
+
+      // Pagination
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
       if (error) throw error;
 
-      return data || [];
+      return {
+        data: data || [],
+        count: count || 0,
+        page,
+        pageSize,
+        totalPages: count ? Math.ceil(count / pageSize) : 0
+      };
     } catch (error) {
       console.error('Get car listings error:', error);
       throw error;
@@ -476,6 +514,23 @@ export class SupabaseService {
         .single();
 
       if (error) throw error;
+
+      // Increment inquiry count on the listing
+      if (inquiry.listing_id) {
+        const { data: listing } = await supabase
+          .from('car_listings')
+          .select('inquiries')
+          .eq('id', inquiry.listing_id)
+          .single();
+
+        if (listing) {
+          await supabase
+            .from('car_listings')
+            .update({ inquiries: (listing.inquiries || 0) + 1 })
+            .eq('id', inquiry.listing_id);
+        }
+      }
+
       return data;
     } catch (error) {
       console.error('Create inquiry error:', error);

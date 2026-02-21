@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Car, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { isEmailAdmin } from '@/lib/auth-config';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -27,6 +28,11 @@ const Login = () => {
     if (loading) return;
 
     try {
+      if (isEmailAdmin(formData.email)) {
+        // Redirect admin to admin portal
+        navigate('/admin/login', { state: { error: 'Please use the Admin Portal for administrator access.' } });
+        return;
+      }
       const result = await signIn(formData.email, formData.password);
 
       if (result.success && result.data?.user) {

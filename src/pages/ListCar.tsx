@@ -11,12 +11,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Car, 
-  Upload, 
-  X, 
-  Plus, 
-  CreditCard, 
+import {
+  Car,
+  Upload,
+  X,
+  Plus,
+  CreditCard,
   ArrowLeft,
   Camera,
   DollarSign,
@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import supabaseService from '@/services/supabaseService';
 import api from '@/services/api';
 
 interface CarFormData {
@@ -39,21 +40,21 @@ interface CarFormData {
   condition: string;
   transmission: string;
   fuelType: string;
-  
+
   // Pricing
   price: string;
   negotiable: boolean;
-  
+
   // Details
   description: string;
   features: string[];
-  
+
   // Location
   location: string;
-  
+
   // Images
   images: string[];
-  
+
   // Payment
   paymentMethod: string;
   featuredListing: boolean;
@@ -95,34 +96,50 @@ const ListCar = () => {
 
     setUser(supabaseUser);
 
-    // Load user subscription
-    const loadSubscription = async () => {
+    // Load user subscription and check limits
+    const loadUserData = async () => {
       try {
-        const sub = await api.getUserSubscription(supabaseUser.id);
+        const [sub, listings] = await Promise.all([
+          api.getUserSubscription(supabaseUser.id),
+          supabaseService.getUserCarListings(supabaseUser.id)
+        ]);
+
         if (sub) {
           setSubscription(sub);
+          const limit = sub.benefits?.listingLimit || 2;
+          const currentCount = listings.length;
+
+          if (currentCount >= limit) {
+            setError(`You have reached the listing limit for your ${sub.plan} plan (${limit} listings). Please upgrade your plan to list more cars.`);
+          }
+        } else {
+          // If no sub found, assume basic limits (2)
+          const currentCount = listings.length;
+          if (currentCount >= 2) {
+            setError('You have reached the free listing limit (2 listings). Please upgrade to a premium plan to list more cars.');
+          }
         }
       } catch (err) {
-        console.error('Failed to load subscription:', err);
+        console.error('Failed to load user data:', err);
       }
     };
-    loadSubscription();
+    loadUserData();
   }, [supabaseUser, authLoading, navigate]);
 
   // Calculate pricing based on subscription benefits
   const calculatePricing = () => {
     const standardPrice = 50;
     const featuredPrice = 150;
-    
+
     let listingPrice = standardPrice;
     let featuredPriceFinal = featuredPrice;
-    
+
     if (subscription && subscription.status === 'active') {
       // Apply subscription discounts
       listingPrice = Math.round(standardPrice * (1 - subscription.benefits.listingDiscount / 100));
       featuredPriceFinal = Math.round(featuredPrice * (1 - subscription.benefits.featuredDiscount / 100));
     }
-    
+
     return {
       standard: listingPrice,
       featured: featuredPriceFinal,
@@ -185,13 +202,13 @@ const ListCar = () => {
       };
 
       await api.createCar(carData);
-      
+
       // Calculate final amount based on subscription benefits
       const finalAmount = formData.featuredListing ? pricing.featured : pricing.standard;
-      
+
       // Navigate to payment page
-      navigate('/payment', { 
-        state: { 
+      navigate('/payment', {
+        state: {
           listingData: formData,
           amount: finalAmount,
           description: `Car listing fee - ${formData.make} ${formData.model}`,
@@ -232,7 +249,7 @@ const ListCar = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="make">Make *</Label>
-                  <Select onValueChange={(value) => setFormData({...formData, make: value})}>
+                  <Select onValueChange={(value) => setFormData({ ...formData, make: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select make" />
                     </SelectTrigger>
@@ -243,45 +260,45 @@ const ListCar = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="model">Model *</Label>
                   <Input
                     id="model"
                     value={formData.model}
-                    onChange={(e) => setFormData({...formData, model: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                     placeholder="e.g. Camry, Civic, etc."
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="year">Year *</Label>
-                  <Select onValueChange={(value) => setFormData({...formData, year: value})}>
+                  <Select onValueChange={(value) => setFormData({ ...formData, year: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Array.from({length: 30}, (_, i) => new Date().getFullYear() - i).map(year => (
+                      {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i).map(year => (
                         <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="mileage">Mileage (km) *</Label>
                   <Input
                     id="mileage"
                     type="number"
                     value={formData.mileage}
-                    onChange={(e) => setFormData({...formData, mileage: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, mileage: e.target.value })}
                     placeholder="e.g. 45000"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="condition">Condition *</Label>
-                  <Select onValueChange={(value) => setFormData({...formData, condition: value})}>
+                  <Select onValueChange={(value) => setFormData({ ...formData, condition: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select condition" />
                     </SelectTrigger>
@@ -293,10 +310,10 @@ const ListCar = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="transmission">Transmission *</Label>
-                  <Select onValueChange={(value) => setFormData({...formData, transmission: value})}>
+                  <Select onValueChange={(value) => setFormData({ ...formData, transmission: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select transmission" />
                     </SelectTrigger>
@@ -307,10 +324,10 @@ const ListCar = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="fuelType">Fuel Type *</Label>
-                  <Select onValueChange={(value) => setFormData({...formData, fuelType: value})}>
+                  <Select onValueChange={(value) => setFormData({ ...formData, fuelType: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select fuel type" />
                     </SelectTrigger>
@@ -321,6 +338,23 @@ const ListCar = () => {
                       <SelectItem value="electric">Electric</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="vin">VIN (Vehicle Identification Number)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="vin"
+                      value={(formData as any).vin || ''}
+                      onChange={(e) => setFormData({ ...formData, vin: e.target.value } as any)}
+                      placeholder="Enter 17-digit VIN"
+                      maxLength={17}
+                    />
+                    <Button type="button" variant="outline" size="sm" className="whitespace-nowrap">
+                      Verify VIN
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-gray-500 mt-1">Providing a VIN helps verify your car's history and increases buyer trust.</p>
                 </div>
               </div>
             </div>
@@ -342,26 +376,26 @@ const ListCar = () => {
                       type="number"
                       className="pl-10"
                       value={formData.price}
-                      onChange={(e) => setFormData({...formData, price: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                       placeholder="e.g. 85000"
                     />
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="negotiable"
                     checked={formData.negotiable}
-                    onCheckedChange={(checked) => setFormData({...formData, negotiable: checked as boolean})}
+                    onCheckedChange={(checked) => setFormData({ ...formData, negotiable: checked as boolean })}
                   />
                   <Label htmlFor="negotiable">Price is negotiable</Label>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div>
                   <Label htmlFor="location">Location *</Label>
-                  <Select onValueChange={(value) => setFormData({...formData, location: value})}>
+                  <Select onValueChange={(value) => setFormData({ ...formData, location: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select your location" />
                     </SelectTrigger>
@@ -410,11 +444,11 @@ const ListCar = () => {
                     id="description"
                     rows={4}
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Describe your car's condition, maintenance history, special features, etc."
                   />
                 </div>
-                
+
                 <div>
                   <Label>Features</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
@@ -430,9 +464,9 @@ const ListCar = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 {/* Subscription Benefits Alert */}
                 {subscription && subscription.status === 'active' && (
                   <Alert className="bg-green-50 border-green-200">
@@ -442,7 +476,7 @@ const ListCar = () => {
                     </AlertDescription>
                   </Alert>
                 )}
-                
+
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
@@ -472,13 +506,13 @@ const ListCar = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50">
                     <div className="flex items-center space-x-3">
                       <Checkbox
                         id="featured"
                         checked={formData.featuredListing}
-                        onCheckedChange={(checked) => setFormData({...formData, featuredListing: checked as boolean})}
+                        onCheckedChange={(checked) => setFormData({ ...formData, featuredListing: checked as boolean })}
                       />
                       <div>
                         <div className="flex items-center space-x-2">
@@ -503,7 +537,7 @@ const ListCar = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {subscription && subscription.status === 'active' && (
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-600">
@@ -575,7 +609,7 @@ const ListCar = () => {
                 {currentStep === 4 && 'Describe your car and select features'}
               </CardDescription>
             </CardHeader>
-            
+
             <CardContent>
               {error && (
                 <Alert variant="destructive" className="mb-4">
@@ -597,7 +631,7 @@ const ListCar = () => {
                   </Button>
 
                   {currentStep === totalSteps ? (
-                    <Button type="submit" disabled={isLoading}>
+                    <Button type="submit" disabled={isLoading || error.includes('limit')}>
                       {isLoading ? 'Processing...' : 'Proceed to Payment'}
                     </Button>
                   ) : (

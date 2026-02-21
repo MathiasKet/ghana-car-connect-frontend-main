@@ -6,12 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Database, 
-  Wifi, 
-  WifiOff, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Database,
+  Wifi,
+  WifiOff,
+  CheckCircle,
+  XCircle,
   AlertCircle,
   TestTube,
   User,
@@ -28,7 +28,7 @@ import api from '@/services/api';
 const SupabaseTest = () => {
   const [testResults, setTestResults] = useState<any[]>([]);
   const [isRunning, setIsRunning] = useState(false);
-  
+
   const { user, loading, isAuthenticated, signUp, signIn, signOut } = useSupabaseAuth();
   const { isConnected, lastUpdate } = useSupabaseRealtime();
   const [testEmail, setTestEmail] = useState('test@example.com');
@@ -145,12 +145,12 @@ const SupabaseTest = () => {
     // Test 8: Get Cars (if authenticated)
     if (isAuthenticated) {
       try {
-        const cars = await supabaseApi.getCars();
+        const result = await supabaseApi.getCars();
         addResult(
           'Get Cars',
           true,
-          `Successfully fetched ${cars.length} cars`,
-          { count: cars.length }
+          `Successfully fetched ${result.data.length} cars (Total: ${result.count})`,
+          { count: result.data.length, total: result.count }
         );
       } catch (error: any) {
         addResult('Get Cars', false, error.message);
@@ -321,8 +321,8 @@ const SupabaseTest = () => {
               </TabsList>
 
               <TabsContent value="automated" className="space-y-4">
-                <Button 
-                  onClick={runTests} 
+                <Button
+                  onClick={runTests}
                   disabled={isRunning}
                   className="w-full"
                 >
@@ -363,7 +363,7 @@ const SupabaseTest = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   <Button onClick={testUserSignup} disabled={loading}>
                     <User className="h-4 w-4 mr-2" />
@@ -410,11 +410,10 @@ const SupabaseTest = () => {
                 testResults.map((result, index) => (
                   <div
                     key={index}
-                    className={`p-3 rounded-lg border ${
-                      result.success 
-                        ? 'bg-green-50 border-green-200' 
+                    className={`p-3 rounded-lg border ${result.success
+                        ? 'bg-green-50 border-green-200'
                         : 'bg-red-50 border-red-200'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

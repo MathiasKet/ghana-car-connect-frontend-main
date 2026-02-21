@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Car, Mail, Lock, Eye, EyeOff, User, Phone, MapPin } from 'lucide-react';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { ADMIN_EMAIL, isEmailAdmin } from '@/lib/auth-config';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -40,6 +41,11 @@ const Register = () => {
     }
 
     if (!formData.agreeToTerms) {
+      return;
+    }
+
+    if (isEmailAdmin(formData.email)) {
+      // Don't allow registration with admin email
       return;
     }
 

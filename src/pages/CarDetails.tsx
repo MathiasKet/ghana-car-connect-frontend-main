@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { 
+import {
   ArrowLeft,
   MapPin,
   Calendar,
@@ -23,6 +23,8 @@ import {
   Heart,
   Shield
 } from 'lucide-react';
+import api from '@/services/api';
+import SEO from '@/components/SEO';
 
 interface Car {
   id: string;
@@ -140,16 +142,46 @@ const CarDetails = () => {
     }).format(price);
   };
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
-    
-    // Simulate sending message
-    setMessageSent(true);
-    setTimeout(() => {
-      setMessageSent(false);
-      setShowMessageForm(false);
-      setMessage('');
-    }, 2000);
+  const handleSendMessage = async () => {
+    if (!message.trim() || !car) return;
+
+    try {
+      // Get current user for buyer info
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+      const inquiryData = {
+        listing_id: car.id,
+        buyer_id: currentUser?.id || null, // Allow guest inquiries if allowed
+        buyer_name: currentUser?.user_metadata?.name || 'Interested Buyer',
+        buyer_email: currentUser?.email || 'guest@example.com',
+        buyer_phone: currentUser?.user_metadata?.phone || '',
+        message: message.trim(),
+        status: 'new'
+      };
+
+      await api.createInquiry(inquiryData);
+
+      // Trigger SMS notification to seller
+      if (car.owner.phone) {
+        const smsService = (await import('@/services/smsService')).default;
+        await smsService.sendInquiryNotification(
+          car.owner.phone,
+          inquiryData.buyer_name,
+          `${car.make} ${car.model}`
+        );
+      }
+
+      setMessageSent(true);
+      setTimeout(() => {
+        setMessageSent(false);
+        setShowMessageForm(false);
+        setMessage('');
+      }, 3000);
+    } catch (err) {
+      console.error('Failed to send inquiry:', err);
+      // Still show success in UI for demo purposes if it fails, or show error
+      setError('Failed to send message. Please try again.');
+    }
   };
 
   const handleContactOwner = (method: 'phone' | 'email') => {
@@ -197,6 +229,12 @@ const CarDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title={`${car.year} ${car.make} ${car.model} for Sale`}
+        description={`Check out this ${car.year} ${car.make} ${car.model} available at CarConnect Ghana. Location: ${car.location}. Price: ${formatPrice(car.price)}.`}
+        ogImage={car.imageUrl}
+        ogType="article"
+      />
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-10">
         <div className="container px-4 py-4 mx-auto">
@@ -225,8 +263,8 @@ const CarDetails = () => {
             <Card>
               <CardContent className="p-0">
                 <div className="relative">
-                  <img 
-                    src={car.imageUrl} 
+                  <img
+                    src={car.imageUrl}
                     alt={`${car.make} ${car.model}`}
                     className="w-full h-96 object-cover rounded-t-lg"
                   />
@@ -240,11 +278,11 @@ const CarDetails = () => {
                     </Badge>
                   )}
                 </div>
-                
+
                 {/* Thumbnail Images */}
                 <div className="grid grid-cols-4 gap-2 p-4">
                   {car.images.map((image, index) => (
-                    <img 
+                    <img
                       key={index}
                       src={image}
                       alt={`Image ${index + 1}`}
@@ -353,14 +391,14 @@ const CarDetails = () => {
 
                 {/* Contact Actions */}
                 <div className="space-y-2">
-                  <Button 
-                    className="w-full" 
+                  <Button
+                    className="w-full"
                     onClick={() => setShowMessageForm(!showMessageForm)}
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Send Message
                   </Button>
-                  
+
                   <div className="grid grid-cols-2 gap-2">
                     <Button variant="outline" onClick={() => handleContactOwner('phone')}>
                       <Phone className="h-4 w-4 mr-2" />
@@ -371,6 +409,17 @@ const CarDetails = () => {
                       Email
                     </Button>
                   </div>
+
+                  <Separator />
+
+                  <Button
+                    variant="secondary"
+                    className="w-full bg-orange-50 text-orange-700 hover:bg-orange-100 border-orange-200"
+                    onClick={() => navigate('/book-inspection', { state: { carId: car.id, carName: `${car.make} ${car.model}` } })}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Book Professional Inspection
+                  </Button>
                 </div>
 
                 {/* Message Form */}
@@ -382,7 +431,7 @@ const CarDetails = () => {
                       onChange={(e) => setMessage(e.target.value)}
                       rows={4}
                     />
-                    <Button 
+                    <Button
                       onClick={handleSendMessage}
                       disabled={!message.trim() || messageSent}
                       className="w-full"

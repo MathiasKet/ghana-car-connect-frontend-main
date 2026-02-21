@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Car, Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Car, Mail, Lock, Eye, EyeOff, ShieldCheck, KeyRound } from 'lucide-react';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import SupabaseService from '@/services/supabaseService';
+import { isEmailAdmin, getAdminEmail } from '@/lib/auth-config';
+import { useLocation } from 'react-router-dom';
 
 const AdminLogin = () => {
     const [formData, setFormData] = useState({
@@ -22,7 +24,14 @@ const AdminLogin = () => {
     const [localError, setLocalError] = useState<string | null>(null);
 
     const navigate = useNavigate();
+    const location = useLocation();
     const { signIn, loading, error: authError, isAuthenticated, user } = useSupabaseAuth();
+
+    useEffect(() => {
+        if (location.state?.error) {
+            setLocalError(location.state.error);
+        }
+    }, [location.state]);
 
     // If already authenticated and is admin, redirect to admin dashboard
     useEffect(() => {
@@ -48,8 +57,14 @@ const AdminLogin = () => {
         if (loading) return;
 
         try {
+            if (!isEmailAdmin(formData.email)) {
+                setLocalError('Invalid admin credential. Please use authorized staff credentials only.');
+                return;
+            }
+
             console.log('AdminLogin: Signing in...');
-            const result = await signIn(formData.email, formData.password);
+            const finalEmail = getAdminEmail(formData.email);
+            const result = await signIn(finalEmail, formData.password);
             console.log('AdminLogin: SignIn result:', !!result.data?.user);
 
             if (result.success && result.data?.user) {
@@ -112,14 +127,14 @@ const AdminLogin = () => {
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <Label htmlFor="email">Admin Email</Label>
+                                <Label htmlFor="email">Unique Admin Credential</Label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input
                                         id="email"
                                         name="email"
-                                        type="email"
-                                        placeholder="mrkett25@gmail.com"
+                                        type="text"
+                                        placeholder="Enter admin credential"
                                         className="pl-10"
                                         value={formData.email}
                                         onChange={handleChange}
