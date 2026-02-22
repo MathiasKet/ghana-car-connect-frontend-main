@@ -127,21 +127,12 @@ const About = () => {
         {/* Car Image - overlapping the blue section */}
         <div className="container px-4 mx-auto relative z-20 -mt-24">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 overflow-hidden group">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-2xl p-6 md:p-8 overflow-hidden group border border-gray-200">
               <img
-                src="/about-hero-car.png"
+                src={`/about-hero-car.png?v=${Date.now()}`}
                 alt="Premium Luxury SUV"
                 className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    const div = document.createElement('div');
-                    div.className = "w-full aspect-[16/9] bg-gray-100 rounded-xl flex items-center justify-center";
-                    div.innerHTML = '<svg class="h-24 w-24 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>';
-                    parent.appendChild(div);
-                  }
-                }}
+                style={{ minHeight: '200px' }}
               />
             </div>
           </div>
