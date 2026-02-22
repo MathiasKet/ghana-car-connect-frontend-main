@@ -93,24 +93,26 @@ const About = () => {
       />
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-white relative overflow-hidden">
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 w-1/4 h-full bg-white/5 -skew-x-12 transform translate-x-1/2" />
+      <div className="relative">
+        {/* Blue gradient background */}
+        <div className="bg-gradient-to-r from-primary to-primary/80 text-white relative overflow-hidden pb-32 lg:pb-20">
+          {/* Decorative Background Elements */}
+          <div className="absolute top-0 right-0 w-1/4 h-full bg-white/5 -skew-x-12 transform translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-white/5 skew-x-12 transform -translate-x-1/2" />
 
-        <div className="container px-4 py-20 mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-            <div className="max-w-3xl">
+          <div className="container px-4 pt-20 pb-8 mx-auto relative z-10">
+            <div className="max-w-3xl mx-auto text-center lg:text-left lg:mx-0">
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
                 About CarConnect Ghana
               </h1>
               <p className="text-xl md:text-2xl text-white/90 mb-6 font-medium">
                 Ghana's most trusted platform for buying, selling, and renting cars
               </p>
-              <p className="text-lg text-white/80 mb-8 leading-relaxed max-w-2xl">
+              <p className="text-lg text-white/80 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                 We're revolutionizing the automotive marketplace in Ghana by connecting buyers,
                 sellers, and renters through a secure, transparent, and user-friendly platform.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                 <Button size="lg" variant="secondary" className="font-semibold" onClick={() => navigate('/buy')}>
                   Browse Cars
                 </Button>
@@ -119,26 +121,28 @@ const About = () => {
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="relative group w-full max-w-xl mt-12 lg:mt-0">
-              <div className="absolute inset-0 bg-white/10 blur-[100px] rounded-full" />
-              <div className="relative">
-                <img
-                  src="/about-hero-car.png"
-                  alt="Premium Luxury SUV"
-                  className="w-full h-auto object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.3)] transform hover:scale-105 transition-transform duration-700"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const parent = e.currentTarget.parentElement;
-                    if (parent) {
-                      const div = document.createElement('div');
-                      div.className = "w-full aspect-[16/9] bg-white/10 rounded-2xl flex items-center justify-center animate-pulse border border-white/20";
-                      div.innerHTML = '<svg class="h-24 w-24 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>';
-                      parent.appendChild(div);
-                    }
-                  }}
-                />
-              </div>
+        {/* Car Image - overlapping the blue section */}
+        <div className="container px-4 mx-auto relative z-20 -mt-24">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 overflow-hidden group">
+              <img
+                src="/about-hero-car.png"
+                alt="Premium Luxury SUV"
+                className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    const div = document.createElement('div');
+                    div.className = "w-full aspect-[16/9] bg-gray-100 rounded-xl flex items-center justify-center";
+                    div.innerHTML = '<svg class="h-24 w-24 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>';
+                    parent.appendChild(div);
+                  }
+                }}
+              />
             </div>
           </div>
         </div>
