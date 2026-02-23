@@ -15,6 +15,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import SEO from '@/components/SEO';
+import aboutHeroImg from '@/assets/images/about-hero.png';
 
 const About = () => {
   const navigate = useNavigate();
@@ -126,7 +127,7 @@ const About = () => {
               <div className="absolute inset-0 bg-white/20 blur-[100px] rounded-full group-hover:bg-cyan-400/20 transition-colors duration-500" />
               <div className="relative z-10">
                 <img
-                  src="/car-about-hero.png"
+                  src={aboutHeroImg}
                   alt="Premium Luxury SUV"
                   className="w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-700"
                   onError={(e) => {

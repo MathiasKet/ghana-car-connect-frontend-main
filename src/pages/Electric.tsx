@@ -22,6 +22,7 @@ import {
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
+import electricHeroImg from '@/assets/images/electric-hero.png';
 
 interface Car {
     id: string;
@@ -146,7 +147,7 @@ const Electric = () => {
                                 <div className="absolute inset-0 bg-primary/10 blur-[80px] rounded-full" />
                                 <div className="relative max-w-xl">
                                     <img
-                                        src="/electric-hero-car.png"
+                                        src={electricHeroImg}
                                         alt="Modern Electric Vehicle"
                                         className="w-full h-auto object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.25)] transform hover:scale-105 transition-transform duration-700"
                                         onError={(e) => {
