@@ -174,7 +174,7 @@ export class SupabaseService {
         .from('car_listings')
         .select(`
           *,
-          users!car_listings_user_id_fkey (
+          users (
             name,
             email,
             phone
@@ -251,7 +251,7 @@ export class SupabaseService {
         .from('car_listings')
         .select(`
           *,
-          users!car_listings_user_id_fkey (
+          users (
             name,
             email,
             phone

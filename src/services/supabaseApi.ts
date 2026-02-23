@@ -44,7 +44,7 @@ class SupabaseApiService {
         userData.name,
         userData.phone
       );
-      
+
       if (result.success) {
         return {
           message: 'Registration successful. Please check your email to verify your account.',
@@ -154,7 +154,7 @@ class SupabaseApiService {
   async verifyPayment(reference: string) {
     try {
       const payment = await supabaseService.getPaymentByReference(reference);
-      
+
       // Update payment status to completed if it's pending
       if (payment && payment.status === 'pending') {
         const updatedPayment = await supabaseService.updatePayment(payment.id, {
@@ -163,7 +163,7 @@ class SupabaseApiService {
         });
         return updatedPayment;
       }
-      
+
       return payment;
     } catch (error) {
       console.error('Verify payment error:', error);
@@ -185,13 +185,13 @@ class SupabaseApiService {
       if (userId) {
         return await supabaseService.getUserPayments(userId);
       }
-      
+
       // If no userId provided, get current user's payments
       const currentUser = await supabaseService.getCurrentUser();
       if (currentUser.user) {
         return await supabaseService.getUserPayments(currentUser.user.id);
       }
-      
+
       return [];
     } catch (error) {
       console.error('Get payment history error:', error);
@@ -260,10 +260,10 @@ class SupabaseApiService {
     try {
       const bucket = type === 'car' ? 'car-images' : 'avatars';
       const fileName = `${Date.now()}-${file.name}`;
-      
+
       const result = await supabaseService.uploadFile(bucket, fileName, file);
       const publicUrl = supabaseService.getPublicUrl(bucket, fileName);
-      
+
       return {
         url: publicUrl,
         path: result.path,
@@ -352,11 +352,11 @@ class SupabaseApiService {
 
       // Process data to get unique payment methods per user
       const uniqueMethods = new Map();
-      
+
       (data || []).forEach((payment: any) => {
         const user = Array.isArray(payment.users) ? payment.users[0] : payment.users;
         if (!user) return; // Skip if user data is missing
-        
+
         const key = `${user.id}-${payment.payment_method}`;
         if (!uniqueMethods.has(key)) {
           uniqueMethods.set(key, {
@@ -392,7 +392,7 @@ class SupabaseApiService {
         .from('car_listings')
         .select(`
           *,
-          users!car_listings_user_id_fkey (
+          users (
             name,
             email,
             phone

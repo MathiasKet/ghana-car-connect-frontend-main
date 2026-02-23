@@ -8,13 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Car, 
-  Search, 
-  Filter, 
-  Eye, 
-  Edit, 
-  Trash2, 
+import {
+  Car,
+  Search,
+  Filter,
+  Eye,
+  Edit,
+  Trash2,
   Star,
   TrendingUp,
   Calendar,
@@ -58,22 +58,22 @@ const AdminCarListings = () => {
   const loadListings = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch listings with user data
       const { data: listings, error } = await SupabaseService.supabase
         .from('car_listings')
         .select(`
           *,
-          users!car_listings_user_id_fkey (
+          users (
             name,
             email,
             phone
           )
         `)
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
-      
+
       // Transform data to match AdminCarListing interface
       const adminListings = (listings || []).map(listing => ({
         ...listing,
@@ -82,10 +82,10 @@ const AdminCarListings = () => {
         sellerPhone: listing.users?.phone || 'Unknown',
         paymentStatus: 'paid' // You can implement actual payment status tracking
       }));
-      
+
       setListings(adminListings);
       setFilteredListings(adminListings);
-      
+
     } catch (error) {
       console.error('Failed to load listings:', error);
     } finally {
@@ -98,7 +98,7 @@ const AdminCarListings = () => {
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(listing => 
+      filtered = filtered.filter(listing =>
         listing.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
         listing.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
         listing.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,13 +132,13 @@ const AdminCarListings = () => {
         .from('car_listings')
         .update({ status: newStatus })
         .eq('id', listingId);
-      
+
       if (error) throw error;
-      
-      setListings(listings.map(listing => 
+
+      setListings(listings.map(listing =>
         listing.id === listingId ? { ...listing, status: newStatus as any } : listing
       ));
-      
+
     } catch (error) {
       console.error('Failed to update listing status:', error);
     } finally {
@@ -151,18 +151,18 @@ const AdminCarListings = () => {
     try {
       const listing = listings.find(l => l.id === listingId);
       const newFeaturedState = !listing?.featured;
-      
+
       const { error } = await SupabaseService.supabase
         .from('car_listings')
         .update({ featured: newFeaturedState })
         .eq('id', listingId);
-      
+
       if (error) throw error;
-      
-      setListings(listings.map(listing => 
+
+      setListings(listings.map(listing =>
         listing.id === listingId ? { ...listing, featured: newFeaturedState } : listing
       ));
-      
+
     } catch (error) {
       console.error('Failed to toggle featured status:', error);
     } finally {
@@ -202,7 +202,7 @@ const AdminCarListings = () => {
   const activeListings = listings.filter(l => l.status === 'active').length;
   const pendingListings = listings.filter(l => l.status === 'pending').length;
   const soldListings = listings.filter(l => l.status === 'sold').length;
-  const totalRevenue = listings.filter(l => l.paymentStatus === 'paid').reduce((sum, listing) => 
+  const totalRevenue = listings.filter(l => l.paymentStatus === 'paid').reduce((sum, listing) =>
     sum + (listing.featured ? 150 : 50), 0
   );
 
@@ -349,7 +349,7 @@ const AdminCarListings = () => {
             </TabsList>
 
             <TabsContent value={activeTab}>
-              <ListingsTable 
+              <ListingsTable
                 listings={filteredListings}
                 onStatusChange={handleStatusChange}
                 onFeaturedToggle={handleFeaturedToggle}
@@ -362,7 +362,7 @@ const AdminCarListings = () => {
             </TabsContent>
 
             <TabsContent value="all">
-              <ListingsTable 
+              <ListingsTable
                 listings={filteredListings}
                 onStatusChange={handleStatusChange}
                 onFeaturedToggle={handleFeaturedToggle}
@@ -375,7 +375,7 @@ const AdminCarListings = () => {
             </TabsContent>
 
             <TabsContent value="pending">
-              <ListingsTable 
+              <ListingsTable
                 listings={filteredListings}
                 onStatusChange={handleStatusChange}
                 onFeaturedToggle={handleFeaturedToggle}
@@ -388,7 +388,7 @@ const AdminCarListings = () => {
             </TabsContent>
 
             <TabsContent value="sold">
-              <ListingsTable 
+              <ListingsTable
                 listings={filteredListings}
                 onStatusChange={handleStatusChange}
                 onFeaturedToggle={handleFeaturedToggle}
@@ -412,7 +412,7 @@ const AdminCarListings = () => {
               View detailed information about this car listing
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedListing && (
             <div className="space-y-6">
               {/* Car Images */}
@@ -574,12 +574,12 @@ const AdminCarListings = () => {
 };
 
 // Separate component for the listings table to avoid repetition
-const ListingsTable = ({ 
-  listings, 
-  onStatusChange, 
-  onFeaturedToggle, 
-  onViewDetails, 
-  isLoading 
+const ListingsTable = ({
+  listings,
+  onStatusChange,
+  onFeaturedToggle,
+  onViewDetails,
+  isLoading
 }: {
   listings: AdminCarListing[];
   onStatusChange: (id: string, status: string) => void;
