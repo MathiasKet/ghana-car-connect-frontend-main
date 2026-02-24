@@ -37,7 +37,8 @@ export interface FeaturedCar {
   fuelType: string;
   condition: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
+  images?: string[];
   featured: boolean;
   category: 'buy' | 'rent';
   rentalPrice?: number;

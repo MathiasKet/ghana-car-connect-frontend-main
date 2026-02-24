@@ -17,7 +17,7 @@ const FeaturedSection = () => {
     navigate(category === 'buy' ? '/buy' : '/rent');
   };
 
-  const filteredCars = featuredCars.filter(car => 
+  const filteredCars = featuredCars.filter(car =>
     car.featured && car.category === category
   );
 
@@ -51,16 +51,19 @@ const FeaturedSection = () => {
   }
 
   const CarCard = ({ car }: { car: any }) => (
-    <Card 
+    <Card
       className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
       onClick={() => navigate(`/car/${car.id}`)}
     >
       <CardContent className="p-0">
         <div className="relative">
-          <img 
-            src={car.imageUrl} 
+          <img
+            src={car.images && car.images.length > 0 ? car.images[0] : (car.imageUrl || '/placeholder-car.png')}
             alt={`${car.make} ${car.model}`}
             className="w-full h-48 object-cover"
+            onError={(e) => {
+              e.currentTarget.src = '/placeholder-car.png';
+            }}
           />
           <Badge className="absolute top-2 left-2">
             {car.category === 'buy' ? 'For Sale' : 'For Rent'}
@@ -69,12 +72,12 @@ const FeaturedSection = () => {
         <div className="p-4">
           <h3 className="font-semibold text-lg mb-1">{car.make} {car.model}</h3>
           <p className="text-sm text-gray-600 mb-2">{car.year} • {car.transmission}</p>
-          
+
           <div className="flex items-center text-sm text-gray-600 mb-3">
             <MapPin className="w-4 h-4 mr-1" />
             <span>{car.location}</span>
           </div>
-          
+
           <div className="text-lg font-bold text-primary mb-3">
             {car.category === 'buy' ? (
               <span>GHS {car.price.toLocaleString()}</span>
@@ -82,7 +85,7 @@ const FeaturedSection = () => {
               <span>GHS {car.rentalPrice}/day</span>
             )}
           </div>
-          
+
           <div className="flex flex-wrap gap-2 mb-3">
             <Badge variant="outline" className="text-xs">
               {car.condition}
@@ -95,7 +98,7 @@ const FeaturedSection = () => {
               {car.mileage.toLocaleString()} km
             </Badge>
           </div>
-          
+
           {car.category === 'rent' && (
             <Badge variant={car.available ? 'default' : 'destructive'} className="mb-3">
               {car.available ? 'Available' : 'Unavailable'}
@@ -105,7 +108,7 @@ const FeaturedSection = () => {
       </CardContent>
     </Card>
   );
-  
+
   return (
     <section className="py-16 bg-background">
       <div className="container px-4">
@@ -114,7 +117,7 @@ const FeaturedSection = () => {
             <h2 className="mb-2 text-3xl font-bold">Featured Vehicles</h2>
             <p className="text-muted-foreground">Explore our top picks for buying and renting in Ghana</p>
           </div>
-          
+
           <div className="mt-4 md:mt-0">
             <Tabs value={category} onValueChange={setCategory} className="w-[320px]">
               <TabsList>
@@ -124,7 +127,7 @@ const FeaturedSection = () => {
             </Tabs>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {filteredCars.length > 0 ? (
             filteredCars.map(car => (
@@ -136,7 +139,7 @@ const FeaturedSection = () => {
             </div>
           )}
         </div>
-        
+
         <div className="flex justify-center mt-10">
           <Button variant="outline" size="lg" className="gap-2" onClick={handleViewAll}>
             View All Vehicles <ChevronRight className="w-4 h-4" />

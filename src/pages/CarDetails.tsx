@@ -267,6 +267,9 @@ const CarDetails = () => {
                     src={car.imageUrl}
                     alt={`${car.make} ${car.model}`}
                     className="w-full h-96 object-cover rounded-t-lg"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
                   />
                   <Badge className="absolute top-4 left-4">
                     {car.category === 'buy' ? 'For Sale' : 'For Rent'}
