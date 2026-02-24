@@ -22,9 +22,12 @@ export class UploadService {
 
   // Upload single image
   async uploadImage(file: File): Promise<UploadResponse> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `uploads/${fileName}`;
+    const filePath = `${user.id}/${fileName}`;
 
     const { data, error } = await supabase.storage
       .from(BUCKET_NAME)
@@ -58,7 +61,7 @@ export class UploadService {
   async uploadCarImages(files: File[]): Promise<UploadResponse[]> {
     // Validate files
     const validFiles = files.filter(file => this.validateImageFile(file));
-    
+
     if (validFiles.length !== files.length) {
       throw new Error('Some files are invalid. Please ensure all files are images (JPG, PNG, WebP) and under 5MB.');
     }
@@ -72,9 +75,12 @@ export class UploadService {
       throw new Error('Invalid image file. Please use JPG, PNG, or WebP format under 2MB.');
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
     const fileExt = file.name.split('.').pop();
     const fileName = `avatar-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    const filePath = `${user.id}/${fileName}`;
 
     const { data, error } = await supabase.storage
       .from(BUCKET_NAME)
@@ -149,7 +155,7 @@ export class UploadService {
       img.onload = () => {
         // Calculate new dimensions
         let { width, height } = img;
-        
+
         if (width > maxWidth) {
           height = (maxWidth / width) * height;
           width = maxWidth;
@@ -160,7 +166,7 @@ export class UploadService {
 
         // Draw and compress
         ctx?.drawImage(img, 0, 0, width, height);
-        
+
         canvas.toBlob(
           (blob) => {
             if (blob) {

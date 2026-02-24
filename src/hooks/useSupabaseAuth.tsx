@@ -197,9 +197,10 @@ export const useSupabaseAuth = () => {
         return { success: false, error: error.message };
       }
 
-      // Auth state will be updated by the listener
-      console.log('SignIn successful, returned data:', !!data.user);
-      setAuthState(prev => ({ ...prev, loading: false }));
+      // Auth state will be updated by the listener (onAuthStateChange)
+      // We don't set loading: false here to avoid a race condition where 
+      // loading is false but user is still null for a few frames.
+      console.log('SignIn successful, listener will update state');
       return { success: true, data };
     } catch (error: any) {
       if (error?.name === 'AbortError' || error?.message?.includes('signal is aborted')) {

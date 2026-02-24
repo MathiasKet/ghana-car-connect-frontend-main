@@ -258,11 +258,15 @@ class SupabaseApiService {
   // File upload endpoints
   async uploadImage(file: File, type: 'car' | 'avatar' = 'car') {
     try {
+      const { data: { user } } = await supabaseService.supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
       const bucket = type === 'car' ? 'car-images' : 'avatars';
       const fileName = `${Date.now()}-${file.name}`;
+      const filePath = `${user.id}/${fileName}`;
 
-      const result = await supabaseService.uploadFile(bucket, fileName, file);
-      const publicUrl = supabaseService.getPublicUrl(bucket, fileName);
+      const result = await supabaseService.uploadFile(bucket, filePath, file);
+      const publicUrl = supabaseService.getPublicUrl(bucket, filePath);
 
       return {
         url: publicUrl,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import supabaseService from '@/services/supabaseService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -97,8 +97,26 @@ const Buy = () => {
     }
   }, [currentPage, searchTerm, selectedBrand, selectedPrice, selectedType]);
 
+  const [searchParams] = useSearchParams();
+
   useEffect(() => {
-    // Reset to first page when filters change
+    // Read search params from URL on mount
+    const locationParam = searchParams.get('location');
+    const typeParam = searchParams.get('type');
+    const makeParam = searchParams.get('make');
+
+    if (locationParam) setSearchTerm(locationParam);
+    if (typeParam) {
+      const type = typeParam.charAt(0).toUpperCase() + typeParam.slice(1).toLowerCase();
+      setSelectedType(type);
+    }
+    if (makeParam) {
+      const make = makeParam.charAt(0).toUpperCase() + makeParam.slice(1).toLowerCase();
+      setSelectedBrand(make);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedBrand, selectedPrice, selectedType]);
 

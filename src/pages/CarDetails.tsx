@@ -152,11 +152,14 @@ const CarDetails = () => {
       const inquiryData = {
         listing_id: car.id,
         buyer_id: currentUser?.id || null, // Allow guest inquiries if allowed
-        buyer_name: currentUser?.user_metadata?.name || 'Interested Buyer',
-        buyer_email: currentUser?.email || 'guest@example.com',
-        buyer_phone: currentUser?.user_metadata?.phone || '',
+        seller_id: car.owner.id,
         message: message.trim(),
-        status: 'new'
+        contact_info: {
+          name: currentUser?.user_metadata?.name || 'Interested Buyer',
+          email: currentUser?.email || 'guest@example.com',
+          phone: currentUser?.user_metadata?.phone || '',
+        },
+        status: 'pending' as any
       };
 
       await api.createInquiry(inquiryData);
@@ -166,7 +169,7 @@ const CarDetails = () => {
         const smsService = (await import('@/services/smsService')).default;
         await smsService.sendInquiryNotification(
           car.owner.phone,
-          inquiryData.buyer_name,
+          inquiryData.contact_info.name,
           `${car.make} ${car.model}`
         );
       }

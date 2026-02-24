@@ -466,6 +466,8 @@ export class SupabaseService {
         benefits: {
           listingLimit: 2,
           featuredListings: 0,
+          listingDiscount: 0,
+          featuredDiscount: 0,
           prioritySupport: false,
           analytics: false,
           bulkListing: false,

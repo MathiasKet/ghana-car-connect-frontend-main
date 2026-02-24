@@ -310,6 +310,18 @@ CREATE POLICY "Users can update own avatar" ON storage.objects
     auth.uid()::text = (storage.foldername(name))[1]
   );
 
+CREATE POLICY "Users can delete own car images" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'car-images' AND 
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+CREATE POLICY "Users can delete own avatar" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'avatars' AND 
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+
 -- Create a default admin user (you can change this)
 -- This should be done manually in production for security
 -- INSERT INTO public.users (id, email, name, role, is_verified, is_active)
