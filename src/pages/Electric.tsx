@@ -62,7 +62,7 @@ const Electric = () => {
                 pageSize: pageSize,
                 search: searchTerm,
                 make: selectedBrand,
-                type: selectedType,
+                body_type: selectedType ? selectedType.toLowerCase() : undefined,
                 fuel_type: 'electric' // Always filter by electric
             };
 
@@ -82,7 +82,7 @@ const Electric = () => {
                 id: car.id,
                 name: `${car.make} ${car.model}`,
                 price: car.price,
-                image: (car.images && car.images.length > 0) ? car.images[0] : '/placeholder-car.png',
+                image: (car.images && car.images.length > 0) ? car.images[0] : (car.imageUrl || '/placeholder.svg'),
                 year: car.year,
                 mileage: `${car.mileage} km`,
                 fuel: car.fuel_type,

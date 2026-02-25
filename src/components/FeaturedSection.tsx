@@ -58,7 +58,7 @@ const FeaturedSection = () => {
       <CardContent className="p-0">
         <div className="relative">
           <img
-            src={car.images && car.images.length > 0 ? car.images[0] : (car.imageUrl || '/placeholder-car.png')}
+            src={car.images && car.images.length > 0 ? car.images[0] : (car.imageUrl || '/placeholder.svg')}
             alt={`${car.make} ${car.model}`}
             className="w-full h-48 object-cover"
             onError={(e) => {

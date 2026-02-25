@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
+import {
   Search,
   Car,
   Calendar,
@@ -46,6 +46,7 @@ const Rent = () => {
           .from('car_listings')
           .select('*')
           .eq('status', 'active')
+          .eq('listing_type', 'rent')
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -63,7 +64,7 @@ const Rent = () => {
           fuel: car.fuel_type,
           transmission: car.transmission,
           location: car.location,
-          type: car.type || 'Sedan',
+          type: car.body_type || 'Sedan',
           seats: 5, // Default value, would need to be stored in database
           available: car.status === 'active'
         }));
@@ -82,12 +83,12 @@ const Rent = () => {
   const filteredCars = cars.filter(car => {
     const matchesSearch = car.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLocation = !selectedLocation || car.location === selectedLocation;
-    const matchesPrice = !selectedPrice || 
+    const matchesPrice = !selectedPrice ||
       (selectedPrice === 'under-250' && car.dailyRate < 250) ||
       (selectedPrice === '250-350' && car.dailyRate >= 250 && car.dailyRate <= 350) ||
       (selectedPrice === 'over-350' && car.dailyRate > 350);
     const matchesType = !selectedType || car.type === selectedType;
-    
+
     return matchesSearch && matchesLocation && matchesPrice && matchesType;
   });
 
@@ -122,7 +123,7 @@ const Rent = () => {
                   className="pl-10"
                 />
               </div>
-              
+
               <Select value={selectedLocation || "all"} onValueChange={(value) => setSelectedLocation(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Locations" />
@@ -171,8 +172,8 @@ const Rent = () => {
           {filteredCars.map((car) => (
             <Card key={car.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="aspect-video bg-gray-200 relative">
-                <img 
-                  src={car.image} 
+                <img
+                  src={car.image}
                   alt={car.name}
                   className="object-cover w-full h-full"
                 />
@@ -191,7 +192,7 @@ const Rent = () => {
                     {car.available ? "Available" : "Booked"}
                   </Badge>
                 </div>
-                
+
                 <div className="mb-3">
                   <div className="text-2xl font-bold text-primary">
                     GHS {car.dailyRate}/day
@@ -220,8 +221,8 @@ const Rent = () => {
                   </div>
                 </div>
 
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   disabled={!car.available}
                   onClick={() => {
                     // Navigate to booking page with car data

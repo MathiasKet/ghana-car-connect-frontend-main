@@ -3,12 +3,12 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { 
-  LayoutDashboard, 
-  Settings, 
-  Menu, 
-  Home, 
-  Car, 
+import {
+  LayoutDashboard,
+  Settings,
+  Menu,
+  Home,
+  Car,
   MessageSquare,
   Eye,
   LogOut,
@@ -91,8 +91,8 @@ const AdminLayout = () => {
             })}
           </nav>
           <div className="flex-shrink-0 p-4 border-t border-gray-200">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="w-full justify-start text-gray-600 hover:text-gray-900"
               onClick={logout}
             >
@@ -144,13 +144,9 @@ const AdminLayout = () => {
       <div className="flex flex-col flex-1 md:pl-64">
         {/* Mobile header */}
         <div className="sticky top-0 z-10 flex items-center h-16 px-4 bg-white border-b border-gray-200 md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-          </Sheet>
+          <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)}>
+            <Menu className="h-5 w-5" />
+          </Button>
           <h1 className="ml-4 text-lg font-semibold">Admin Dashboard</h1>
           <div className="ml-auto">
             <Link to="/">

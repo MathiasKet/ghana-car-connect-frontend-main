@@ -75,6 +75,8 @@ export interface Database {
           condition: string;
           transmission: string;
           fuel_type: string;
+          body_type: 'sedan' | 'suv' | 'truck' | 'van' | 'luxury' | 'hatchback' | 'coupe' | 'convertible' | null;
+          listing_type: 'sell' | 'rent';
           description: string;
           location: string;
           images: string[];
@@ -99,6 +101,8 @@ export interface Database {
           condition: string;
           transmission: string;
           fuel_type: string;
+          body_type?: 'sedan' | 'suv' | 'truck' | 'van' | 'luxury' | 'hatchback' | 'coupe' | 'convertible' | null;
+          listing_type?: 'sell' | 'rent';
           description: string;
           location: string;
           images: string[];
@@ -123,6 +127,8 @@ export interface Database {
           condition?: string;
           transmission?: string;
           fuel_type?: string;
+          body_type?: 'sedan' | 'suv' | 'truck' | 'van' | 'luxury' | 'hatchback' | 'coupe' | 'convertible' | null;
+          listing_type?: 'sell' | 'rent';
           description?: string;
           location?: string;
           images?: string[];

@@ -41,6 +41,8 @@ interface CarFormData {
   condition: string;
   transmission: string;
   fuelType: string;
+  listingType: 'sell' | 'rent';
+  bodyType: string;
 
   // Pricing
   price: string;
@@ -74,6 +76,8 @@ const ListCar = () => {
     condition: '',
     transmission: '',
     fuelType: '',
+    listingType: 'sell',
+    bodyType: '',
     price: '',
     negotiable: false,
     description: '',
@@ -197,6 +201,8 @@ const ListCar = () => {
         condition: formData.condition,
         transmission: formData.transmission,
         fuel_type: formData.fuelType,
+        body_type: formData.bodyType || null,
+        listing_type: formData.listingType,
         description: formData.description,
         location: formData.location,
         images: formData.images,
@@ -250,6 +256,46 @@ const ListCar = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <Label>Listing Type *</Label>
+                  <div className="flex gap-4 mt-2">
+                    <Button
+                      type="button"
+                      variant={formData.listingType === 'sell' ? 'default' : 'outline'}
+                      className="flex-1"
+                      onClick={() => setFormData({ ...formData, listingType: 'sell' })}
+                    >
+                      For Sale
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={formData.listingType === 'rent' ? 'default' : 'outline'}
+                      className="flex-1"
+                      onClick={() => setFormData({ ...formData, listingType: 'rent' })}
+                    >
+                      For Rent
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="bodyType">Body Type *</Label>
+                  <Select onValueChange={(value) => setFormData({ ...formData, bodyType: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select body type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sedan">Sedan</SelectItem>
+                      <SelectItem value="suv">SUV</SelectItem>
+                      <SelectItem value="truck">Truck</SelectItem>
+                      <SelectItem value="van">Van</SelectItem>
+                      <SelectItem value="hatchback">Hatchback</SelectItem>
+                      <SelectItem value="coupe">Coupe</SelectItem>
+                      <SelectItem value="luxury">Luxury</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div>
                   <Label htmlFor="make">Make *</Label>
                   <Select onValueChange={(value) => setFormData({ ...formData, make: value })}>

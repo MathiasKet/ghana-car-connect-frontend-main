@@ -58,7 +58,8 @@ const Buy = () => {
         pageSize: pageSize,
         search: searchTerm,
         make: selectedBrand,
-        type: selectedType
+        body_type: selectedType.toLowerCase(),
+        listing_type: 'sell'
       };
 
       // Handle price range filter

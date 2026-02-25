@@ -196,8 +196,15 @@ export class SupabaseService {
         query = query.ilike('model', `%${filters.model}%`);
       }
 
-      if (filters.type) {
-        query = query.eq('type', filters.type);
+      if (filters.listing_type) {
+        query = query.eq('listing_type', filters.listing_type);
+      } else if (filters.type) {
+        // Handle legacy or frontend-named 'type' filtering
+        query = query.eq('listing_type', filters.type);
+      }
+
+      if (filters.body_type) {
+        query = query.eq('body_type', filters.body_type);
       }
 
       if (filters.fuel_type) {
