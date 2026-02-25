@@ -49,14 +49,6 @@ const Header = () => {
         <div className="hidden md:flex md:items-center md:space-x-4">
           {user ? (
             <>
-              {user.role === 'admin' && (
-                <Link to="/admin">
-                  <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10">
-                    <Users className="h-4 w-4 mr-2" />
-                    Admin
-                  </Button>
-                </Link>
-              )}
               <Link to="/dashboard">
                 <Button variant="ghost" size="sm">
                   <User className="h-4 w-4 mr-2" />
@@ -122,11 +114,6 @@ const Header = () => {
                 </Link>
                 {user ? (
                   <>
-                    {user.role === 'admin' && (
-                      <Link to="/admin" className="flex items-center py-2 text-lg font-medium border-b text-primary">
-                        <Users className="w-5 h-5 mr-3" /> Admin Panel
-                      </Link>
-                    )}
                     <Link to="/dashboard" className="flex items-center py-2 text-lg font-medium border-b">
                       <User className="w-5 h-5 mr-3" /> Dashboard
                     </Link>
