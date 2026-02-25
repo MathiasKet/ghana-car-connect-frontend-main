@@ -73,21 +73,20 @@ console.error = (...args: any[]) => {
   originalConsoleError.apply(console, args);
 };
 
-// Add global error handlers for unhandled promise rejections
-window.addEventListener('unhandledrejection', (event) => {
-  const reason = event.reason;
-
-  if (shouldFilterError(reason)) {
-    event.preventDefault(); // Stop from showing as "Uncaught (in promise)"
+window.addEventListener('error', (event) => {
+  // Handle chunk load errors (Vite dynamic import failures)
+  // This happens after a deployment when old hashes are referenced by client
+  if (
+    event.message &&
+    (event.message.includes('Failed to fetch dynamically imported module') ||
+      event.message.includes('Importing a module script failed') ||
+      event.message.includes('error loading dynamically imported module'))
+  ) {
+    console.warn('Chunk load error detected. Reloading page...');
+    window.location.reload();
     return;
   }
 
-  // Log legitimate errors through our filtered console.error
-  console.error('Unhandled promise rejection:', reason);
-  event.preventDefault();
-});
-
-window.addEventListener('error', (event) => {
   // Filter out browser extension errors
   if (event.filename && (event.filename.includes('content.js') || event.filename.includes('extension') || event.filename.includes('inspector'))) {
     event.preventDefault();
@@ -101,6 +100,29 @@ window.addEventListener('error', (event) => {
   }
 
   console.error('Global error:', event.error || event.message);
+});
+
+// Better handling for the "Uncaught (in promise) Object" issue
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason;
+
+  if (shouldFilterError(reason)) {
+    event.preventDefault();
+    return;
+  }
+
+  // Special handling for dynamic import failures in promises
+  const reasonMessage = reason?.message || String(reason);
+  if (reasonMessage.includes('Failed to fetch dynamically imported module')) {
+    console.warn('Chunk load error in promise detected. Reloading page...');
+    window.location.reload();
+    return;
+  }
+
+  // Log legitimate errors through our filtered console.error
+  const errorToLog = reason instanceof Error ? reason : JSON.stringify(reason);
+  console.error('Unhandled promise rejection:', errorToLog);
+  event.preventDefault();
 });
 
 createRoot(document.getElementById("root")!).render(<App />);
