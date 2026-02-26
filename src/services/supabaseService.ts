@@ -553,7 +553,7 @@ export class SupabaseService {
         .from('inquiries')
         .select(`
           *,
-          buyers:users!inquiries_buyer_id_fkey (
+          buyers:users (
             name,
             email,
             phone
